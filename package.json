@@ -9,8 +9,20 @@
   "license": "ISC",
   "dependencies": {
     "express": "^4.21.2",
-    "socket.io": "^4.8.1"
+    "http": "^0.0.1-security",
+    "os": "^0.1.2",
+    "socket.io": "^4.8.1",
+    "socketio": "^1.0.0"
   },
   "keywords": [],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/r7melo/Briga-de-Bebus.git"
+  },
+  "bugs": {
+    "url": "https://github.com/r7melo/Briga-de-Bebus/issues"
+  },
+  "homepage": "https://github.com/r7melo/Briga-de-Bebus#readme",
+  "devDependencies": {},
   "description": ""
 }
