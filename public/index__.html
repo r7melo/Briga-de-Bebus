@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo da Cobrinha - Multiplayer</title>
+    <style>
+        /* Resetando estilos básicos */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f0f0f0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column; /* Organiza os elementos verticalmente */
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.container {
+    display: flex;
+    flex-direction: column; /* Organiza o conteúdo em uma coluna */
+    justify-content: center;
+    align-items: center;
+    max-width: 100%; /* Garante que o conteúdo não ultrapasse a tela */
+    width: 100%;
+}
+
+h1 {
+    color: #333;
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+}
+
+button {
+    background-color: #4CAF50;
+    border: none;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 18px;
+    margin: 10px 0;
+    cursor: pointer;
+    border-radius: 10px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+}
+
+button:hover {
+    background-color: #45a049;
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+    transform: translateY(-4px);
+}
+
+button:active {
+    transform: translateY(2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.control-container {
+    display: grid;
+    grid-template-columns: repeat(3, 50px);
+    grid-template-rows: repeat(3, 50px);
+    gap: 10px;
+    justify-items: center;
+    margin-top: 30px;
+}
+
+.control-btn {
+    background-color: #4CAF50;
+    width: 50px;
+    height: 50px;
+    border-radius: 10px;
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.control-btn:hover {
+    background-color: #45a049;
+    transform: translateY(-4px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+footer {
+    margin-top: 30px;
+    font-size: 0.9rem;
+    color: #777;
+}
+
+/* Media Query para telas menores que 1000px */
+@media (max-width: 1000px) {
+    
+    html, body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden; /* Evita rolagem */
+        height: 100vh; /* Usa a altura total da tela */
+        width: 100vw; /* Usa a largura total da tela */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    h1 {
+        font-size: 0rem;
+    }
+
+    button {
+        padding: 12px 28px;
+        font-size: 30px;
+    }
+
+    #gameCanvas {
+        width: 100vw;  /* Ocupa toda a largura */
+        display: block;
+        background-color: white; /* Fundo do canvas */
+    }
+
+    .control-container {
+        grid-template-columns: repeat(3, 60px);
+        grid-template-rows: repeat(3, 60px);
+    }
+
+    .control-btn {
+        width: 60%;
+        font-size: 60px;
+    }
+}
+
+
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="1000" height="1000"></canvas>
+    
+    <div id="controls">
+        <div id="arrow-buttons">
+            <div class="row">
+                <button class="btn" id="up">↑</button>
+            </div>
+            <div class="row">
+                <button class="btn" id="left">←</button>
+                <button class="btn" id="right">→</button>
+            </div>
+            <div class="row">
+                <button class="btn" id="down">↓</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();  // Conectar-se ao servidor
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const tamanhoQuadrado = 25; // Tamanho de cada quadrado (25px)
+        const largura = canvas.width / tamanhoQuadrado; // 1000px / 25px = 40 quadrados
+        const altura = canvas.height / tamanhoQuadrado; // 1000px / 25px = 40 quadrados
+
+        let jogador = {
+            id: null,   // Identificador do jogador
+            corpo: [{ x: 8, y: 1 }], // Posições da cobra
+            direcao: 'direita', // Direção inicial
+            cor: gerarCorAleatoria() // Gerar cor aleatória para o jogador
+        };
+
+        document.querySelectorAll("button").forEach(btn => {
+            btn.style.backgroundColor = jogador.cor;
+        });
+
+
+        // Variáveis de controle do movimento
+        let movimentoDirecao = 'direita';
+
+        // Carregar imagem de fundo
+        const fundo = new Image();
+        fundo.src = 'background.png';  // Coloque o caminho correto da imagem de fundo
+
+        fundo.onload = function() {
+            // Iniciar a comunicação com o servidor após carregar a imagem
+            socket.emit('novoJogador'); // Enviar pedido para o servidor criar novo jogador
+        };
+
+        // Receber as atualizações de todas as cobras do servidor
+        socket.on('atualizarJogadores', (jogadores) => {
+            desenharJogo(jogadores);
+        });
+
+        // Função para desenhar as cobras e o fundo
+        function desenharJogo(jogadores) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Limpa o canvas
+
+            // Desenha a imagem de fundo (redimensionada para 1000x1000px)
+            ctx.drawImage(fundo, 0, 0, canvas.width, canvas.height);
+
+            // Desenha cada cobra com a cor do jogador
+            jogadores.forEach(cobra => {
+                ctx.fillStyle = cobra.cor; // Usa a cor do jogador
+                cobra.corpo.forEach(parte => {
+                    ctx.fillRect(parte.x * tamanhoQuadrado, parte.y * tamanhoQuadrado, tamanhoQuadrado, tamanhoQuadrado);
+                });
+            });
+        }
+
+        // Função para gerar uma cor aleatória para cada jogador
+        function gerarCorAleatoria() {
+            const letras = '0123456789ABCDEF';
+            let cor = '#';
+            for (let i = 0; i < 6; i++) {
+                cor += letras[Math.floor(Math.random() * 16)];
+            }
+            return cor;
+        }
+
+        // Função para mover a cobra apenas uma casa por vez
+        function moverCobra() {
+            let cabeca = jogador.corpo[0];
+            let novaCabeca;
+
+            // Movimentação da cobra uma casa por vez
+            if (movimentoDirecao === 'cima') novaCabeca = { x: cabeca.x, y: cabeca.y - 1 };
+            if (movimentoDirecao === 'baixo') novaCabeca = { x: cabeca.x, y: cabeca.y + 1 };
+            if (movimentoDirecao === 'esquerda') novaCabeca = { x: cabeca.x - 1, y: cabeca.y };
+            if (movimentoDirecao === 'direita') novaCabeca = { x: cabeca.x + 1, y: cabeca.y };
+
+            // Lógica para a cobra "voltar" quando atingir a parede
+            if (novaCabeca.x < 0) novaCabeca.x = largura - 1;
+            if (novaCabeca.x >= largura) novaCabeca.x = 0;
+            if (novaCabeca.y < 0) novaCabeca.y = altura - 1;
+            if (novaCabeca.y >= altura) novaCabeca.y = 0;
+
+            jogador.corpo.unshift(novaCabeca); // Adiciona a nova cabeça no início
+            jogador.corpo.pop();  // Remove a cauda
+            socket.emit('moverCobra', jogador); // Enviar movimento para o servidor
+        }
+
+        // Funções de controle de direção com os botões
+        document.getElementById('up').addEventListener('click', function() {
+            movimentoDirecao = 'cima';
+            moverCobra();
+        });
+
+        document.getElementById('down').addEventListener('click', function() {
+            movimentoDirecao = 'baixo';
+            moverCobra();
+        });
+
+        document.getElementById('left').addEventListener('click', function() {
+            movimentoDirecao = 'esquerda';
+            moverCobra();
+        });
+
+        document.getElementById('right').addEventListener('click', function() {
+            movimentoDirecao = 'direita';
+            moverCobra();
+        });
+        moverCobra();
+
+    </script>
+</body>
+</html>
