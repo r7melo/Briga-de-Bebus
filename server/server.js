@@ -129,7 +129,8 @@ io.on('connection', (socket) => {
 
 
 
-            console.log(jogadores);
+            proximo_jogador = passarDado();
+            jogadores[proximo_jogador].comDado = true;
 
         }
     });
@@ -138,7 +139,6 @@ io.on('connection', (socket) => {
     socket.on('darDado', (id) => {
         if (jogadores[id]) {
             jogadores[id].comDado = true;
-            console.log(passarDado());
         }
     });
 
