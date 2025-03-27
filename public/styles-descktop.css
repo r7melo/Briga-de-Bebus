@@ -1,0 +1,73 @@
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f0f0f0;
+    height: 100vh;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.game-container {
+    flex: 0 0 75%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    margin-top: 20px;
+}
+
+.players-container {
+    flex: 0 0 25%;
+    padding: 20px;
+    background-color: #fff;
+    border-left: 2px solid #ddd;
+    height: 100vh;
+    overflow-y: auto;
+}
+
+h3 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.player-list {
+    list-style-type: none;
+    padding: 0;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.player-list li {
+    padding: 10px;
+    margin: 5px 0;
+    border-radius: 5px;
+    background-color: #e3e3e3;
+    text-align: center;
+    font-size: 1.2rem;
+}
+
+.input-container {
+    margin: 20px;
+    text-align: center;
+}
+
+#nomeInput {
+    margin-bottom: 10px;
+    padding: 10px;
+    font-size: 1rem;
+    width: 80%;
+}
+
+#salvarButton {
+    padding: 10px;
+    background-color: #4CAF50;
+    color: white;
+    font-size: 1rem;
+    border: none;
+    cursor: pointer;
+}
+
+#salvarButton:hover {
+    background-color: #45a049;
+}
