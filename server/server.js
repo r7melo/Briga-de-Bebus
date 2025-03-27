@@ -34,6 +34,7 @@ io.on('connection', (socket) => {
     socket.on('criarJogador', (e) => {
 
         jogadores[socket.id] = {
+            id: socket.id,
             nome: null,
             cor: gerarCorAleatoria(),
             corpo: lista[Math.floor(Math.random() * lista.length)],
@@ -43,7 +44,7 @@ io.on('connection', (socket) => {
             casaPassada: null
         }
     
-        io.emit('definirCor', jogadores[socket.id].cor);
+        io.emit('definirCor', jogadores[socket.id]);
         
 
         console.log('Novo jogador conectado:', socket.id);
@@ -137,6 +138,7 @@ io.on('connection', (socket) => {
     socket.on('darDado', (id) => {
         if (jogadores[id]) {
             jogadores[id].comDado = true;
+            console.log(passarDado());
         }
     });
 
@@ -153,18 +155,7 @@ function jogarDado() {
 }
 
 function passarDado() {
-
-
-    if (jogadores.length === 1) {
-        return jogadores[0].id;
-
-    } else {
-        return chaveMenosJogadas = jogadores.indexOf(
-            lista.reduce((menor, jogador) => jogador.jogadas < menor.jogadas ? jogador : menor)
-        );
-    }
-    
-    
+    return Object.keys(jogadores).reduce((menorId, id) => jogadores[id].jogadas < jogadores[menorId].jogadas ? id : menorId, Object.keys(jogadores)[0]);
 }
 
 // Função de gerar cor aleatória

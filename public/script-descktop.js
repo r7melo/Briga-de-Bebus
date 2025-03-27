@@ -40,16 +40,25 @@ function atualizarListaJogadores(jogadores) {
     playerList.innerHTML = '';  // Limpar a lista antes de atualizar
 
     Object.entries(jogadores).forEach(([id, jogador]) => {
-        if(jogador.nome){
+        if (jogador.nome) {
             const li = document.createElement('li');
             li.textContent = `${jogador.nome}`;
-            li.style.backgroundColor = jogador.cor;  // Aplicar cor do jogador
+            li.style.backgroundColor = jogador.cor;
             li.style.color = "#fff";
+            li.classList.add("player-list");
 
-            // Adiciona um event listener para o clique no item da lista
+            // Adiciona um event listener para clique
             li.addEventListener('click', () => {
+                // Remove a classe "selected" de todos os itens
+                document.querySelectorAll('.player-list li').forEach(item => {
+                    item.classList.remove('selected');
+                });
 
-                socket.emit('darDado', id); 
+                // Adiciona a classe "selected" ao item clicado
+                li.classList.add('selected');
+
+                // Emitir o evento para o socket
+                socket.emit('darDado', id);
             });
 
             playerList.appendChild(li);

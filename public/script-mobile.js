@@ -38,10 +38,13 @@ fundo.onload = function() {
 
 };
 
-socket.on('definirCor', (cor) => {
-    document.querySelectorAll("button").forEach(btn => {
-        btn.style.backgroundColor = cor;
-    });
+socket.on('definirCor', (jogador) => {
+    console.log(jogador)
+    if(jogador.id == socket.id){
+        document.querySelectorAll("button").forEach(btn => {
+            btn.style.backgroundColor = jogador.cor;
+        });
+    }
 });
 
 socket.on('resultadoDado', (dado) => {

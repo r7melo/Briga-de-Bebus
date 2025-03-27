@@ -71,3 +71,17 @@ h3 {
 #salvarButton:hover {
     background-color: #45a049;
 }
+
+/* Estilo padrão dos itens da lista */
+.player-list li {
+    cursor: pointer;
+    padding: 10px;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+
+/* Classe para destacar o item selecionado */
+.player-list li.selected {
+    border: 2px solid yellow;
+    box-shadow: 0 0 10px yellow;
+}
