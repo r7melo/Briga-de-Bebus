@@ -39,7 +39,7 @@ fundo.onload = function() {
 };
 
 socket.on('definirCor', (jogador) => {
-    console.log(jogador)
+
     if(jogador.id == socket.id){
         document.querySelectorAll("button").forEach(btn => {
             btn.style.backgroundColor = jogador.cor;
@@ -47,14 +47,19 @@ socket.on('definirCor', (jogador) => {
     }
 });
 
-socket.on('resultadoDado', (dado) => {
-    const dadoButton = document.getElementById("dado");
-    dadoButton.innerText = dado;
-    
-    if (dado === '🎲') {
-        dadoButton.disabled = false;
-    } else {
-        dadoButton.disabled = true;
+socket.on('resultadoDado', (jogador) => {
+
+    if(jogador.id == socket.id){
+
+        const dadoButton = document.getElementById("dado");
+        dadoButton.innerText = jogador.passos;
+        
+        if (jogador.passos === '🎲') {
+            dadoButton.disabled = false;
+        } else {
+            dadoButton.disabled = true;
+        }
+
     }
 });
 

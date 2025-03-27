@@ -47,10 +47,15 @@ function atualizarListaJogadores(jogadores) {
             li.style.color = "#fff";
             li.classList.add("player-list");
 
+            // Se o jogador tiver comDado: true, adicionar classe "selected"
+            if (jogador.comDado) {
+                li.classList.add('selected');
+            }
+
             // Adiciona um event listener para clique
             li.addEventListener('click', () => {
                 // Remove a classe "selected" de todos os itens
-                document.querySelectorAll('.player-list li').forEach(item => {
+                document.querySelectorAll('.player-list').forEach(item => {
                     item.classList.remove('selected');
                 });
 
@@ -65,4 +70,5 @@ function atualizarListaJogadores(jogadores) {
         }
     });
 }
+
 

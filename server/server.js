@@ -40,7 +40,7 @@ io.on('connection', (socket) => {
             corpo: lista[Math.floor(Math.random() * lista.length)],
             passos: 0,
             jogadas: 0,
-            comDado: false,
+            comDado: !temJogadorComDado(jogadores),
             casaPassada: null
         }
     
@@ -108,11 +108,16 @@ io.on('connection', (socket) => {
                 jogador.passos--;
                 jogadores[socket.id] = jogador;
                 
-                io.emit('resultadoDado', jogador.passos !== 0 ? jogador.passos : '🎲');
+                if (jogador.passos == 0) {
+                    jogador.passos = '🎲'
+                    proximo_jogador = passarDado();
+                    jogadores[proximo_jogador].comDado = true;
+                }
+
+                io.emit('resultadoDado', jogador);
                 io.emit('atualizarJogadores', jogadores);
 
 
-                console.log(jogadores);
             }
             
         }
@@ -125,12 +130,7 @@ io.on('connection', (socket) => {
             jogadores[socket.id].passos = dado;
             jogadores[socket.id].comDado = false;
             jogadores[socket.id].jogadas++;
-            io.emit('resultadoDado', dado);
-
-
-
-            proximo_jogador = passarDado();
-            jogadores[proximo_jogador].comDado = true;
+            io.emit('resultadoDado', jogadores[socket.id]);
 
         }
     });
@@ -158,6 +158,13 @@ function passarDado() {
     return Object.keys(jogadores).reduce((menorId, id) => jogadores[id].jogadas < jogadores[menorId].jogadas ? id : menorId, Object.keys(jogadores)[0]);
 }
 
+function temJogadorComDado(jogadores) {
+    return !!(jogadores && Object.values(jogadores).some(jogador => jogador.comDado));
+}
+
+
+
+
 // Função de gerar cor aleatória
 function gerarCorAleatoria() {
     const letras = '0123456789ABCDEF';
@@ -167,6 +174,7 @@ function gerarCorAleatoria() {
     }
     return cor;
 }
+
 
 
 // Função para pegar o IP local da máquina

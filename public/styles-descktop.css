@@ -82,6 +82,5 @@ h3 {
 
 /* Classe para destacar o item selecionado */
 .player-list li.selected {
-    border: 2px solid yellow;
-    box-shadow: 0 0 10px yellow;
+    border: 5px solid rgb(255, 60, 0);
 }
