@@ -47,12 +47,18 @@ io.on('connection', (socket) => {
     socket.on('configurarResistencia', (dados)=>{
         const { chave, acao } = dados;
 
-        if(acao=='+') jogadores[chave].resistencia++;
-        if(acao=='-') jogadores[chave].resistencia--;
+        if(acao=='+' && bancoResistencia > 0) {
+            jogadores[chave].resistencia++;
+            bancoResistencia--;
+        }
+
+        if(acao=='-' && bancoResistencia <= 8) {
+            jogadores[chave].resistencia--;
+            bancoResistencia++;
+        }
 
         io.emit('atualizarJogadores', jogadores);
 
-        console.log(jogadores[chave], acao);
     });
     
     // Quando o jogador se desconectar
