@@ -42,7 +42,7 @@ io.on('connection', (socket) => {
                 cor: gerarCorAleatoria(),
                 corpo: lista[Math.floor(Math.random() * lista.length)],
                 passos: 0,
-                jogadas: passarDado()?.jogadas ?? 0,
+                jogadas: rodadaAtual(),
                 comDado: !temJogadorComDado(jogadores),
                 casaPassada: null
             }
@@ -57,7 +57,7 @@ io.on('connection', (socket) => {
             jogadores[socket.id].id = id;
             jogadores[socket.id].nome = id;
             jogadores[socket.id].cor = gerarCorAleatoria();
-            jogadores[socket.id].jogadas = passarDado()?.jogadas ?? 0,
+            jogadores[socket.id].jogadas = rodadaAtual(),
             jogadores[socket.id].comDado = !temJogadorComDado(jogadores);
             jogadores[socket.id].passos = 0;
 
@@ -65,6 +65,12 @@ io.on('connection', (socket) => {
         }
 
     
+        console.log('\n'+rodadaAtual());
+        Object.entries(jogadores).forEach(([chave, jogador]) => {
+            console.log(`Chave: ${chave}, ID: ${jogador.id}, Jogadas: ${jogador.jogadas}`);
+        });
+        
+
         io.emit('definirCor', jogadores[socket.id]);
         
 
@@ -126,7 +132,7 @@ io.on('connection', (socket) => {
                 const y = jogador.corpo.y;
                 
     
-                if ((mapa[y][x] == 1) && (jogadores[socket.id].casaPassada != direcao) && (jogador.passos > 0)) {
+                if ((mapa[y][x] != 0) && (jogadores[socket.id].casaPassada != direcao) && (jogador.passos > 0)) {
     
                     jogador.passos--;
                     jogadores[socket.id] = jogador;
@@ -193,6 +199,12 @@ function jogarDado() {
 
 function passarDado() {
     return Object.keys(jogadores).filter(id => jogadores[id].nome && jogadores[id].nome.trim() !== '').sort((a, b) => jogadores[a].jogadas - jogadores[b].jogadas)[0];
+}
+
+function rodadaAtual() {
+    const chave = Object.keys(jogadores).filter(id => jogadores[id].nome && jogadores[id].nome.trim() !== '').sort((a, b) => jogadores[b].jogadas - jogadores[a].jogadas)[0];
+    if(jogadores[chave]) return jogadores[chave].jogadas-1;
+    else return 0;
 }
 
 

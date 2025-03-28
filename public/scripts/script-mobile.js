@@ -14,7 +14,7 @@ screen.orientation.lock("portrait").catch(err => console.log(err));
 
 // Função para gerar um identificador único
 function gerarIdUnico() {
-    return 'id-' + Math.random().toString(36);
+    return 'usuario-' + Math.random().toString(36);
 }
 
 // Verifica se já existe um ID no localStorage
