@@ -48,25 +48,25 @@ function atualizarListaJogadores(jogadores) {
     Object.entries(jogadores).forEach(([id, jogador]) => {
         if (jogador.nome) {
 
-            jogador.resistencia
+            jogador.resistencia;
             const li = document.createElement('li');
             li.style.backgroundColor = jogador.cor;
             li.style.color = jogador.cor;
             li.classList.add("player-list");
-            li.setAttribute("data-resistencia", (jogador.resistencia*12.5) || 100); // Define resistencia inicial
+            li.setAttribute("data-resistencia", (jogador.resistencia * 12.5) || 100); // Define resistência inicial
 
             // Criando o nome do jogador
             const nomeSpan = document.createElement('span');
             nomeSpan.textContent = `${jogador.nome}`;
             li.appendChild(nomeSpan);
 
-            // Criando a barra de resistencia
+            // Criando a barra de resistência
             const resistenciaBarra = document.createElement('div');
             resistenciaBarra.classList.add("resistencia-barra");
-            resistenciaBarra.style.width = ((jogador.resistencia*12.5) || 100) + "%";
+            resistenciaBarra.style.width = ((jogador.resistencia * 12.5) || 100) + "%";
             li.appendChild(resistenciaBarra);
 
-            // Se a resistencia for 0, deixar a barra da cor do jogador
+            // Se a resistência for 0, deixar a barra da cor do jogador
             if (jogador.resistencia === 0) {
                 resistenciaBarra.style.backgroundColor = jogador.cor;
             }
@@ -76,10 +76,43 @@ function atualizarListaJogadores(jogadores) {
                 li.classList.add('selected');
             }
 
+            // Criando os botões de aumentar e diminuir resistência
+            const btnAumentar = document.createElement('button');
+            btnAumentar.textContent = '+';
+            btnAumentar.style.marginLeft = '10px';
+            btnAumentar.addEventListener('click', () => {
+                // Aqui estamos pegando a chave do jogador no objeto jogadores
+                const chaveJogador = Object.keys(jogadores).find(key => jogadores[key].id === jogador.id);
+                
+                // Emite o evento 'configurarResistencia' com a chave e a ação
+                socket.emit('configurarResistencia', { chave: chaveJogador, acao: '+' });
+            });
+
+            const btnDiminuir = document.createElement('button');
+            btnDiminuir.textContent = '-';
+            btnDiminuir.style.marginLeft = '5px';
+            btnDiminuir.addEventListener('click', () => {
+                // Aqui estamos pegando a chave do jogador no objeto jogadores
+                const chaveJogador = Object.keys(jogadores).find(key => jogadores[key].id === jogador.id);
+                
+                // Emite o evento 'configurarResistencia' com a chave e a ação
+                socket.emit('configurarResistencia', { chave: chaveJogador, acao: '-' });
+            });
+
+            // Adicionando os botões ao li
+            const botaoContainer = document.createElement('div');
+            botaoContainer.style.display = 'flex';
+            botaoContainer.style.alignItems = 'center';
+            botaoContainer.style.marginLeft = 'auto'; // Alinha os botões à direita
+            botaoContainer.appendChild(btnAumentar);
+            botaoContainer.appendChild(btnDiminuir);
+
+            li.appendChild(botaoContainer);
             playerList.appendChild(li);
         }
     });
 }
+
 
 
 // Função para abrir o modal

@@ -43,6 +43,17 @@ io.on('connection', (socket) => {
     socket.on('editarNome', (novoNome) => { editarNome(socket, novoNome) });
     socket.on('mover', (direcao) => { moverJogador(socket, direcao) });
     socket.on('jogarDado', () => { jogarDado(socket) });
+
+    socket.on('configurarResistencia', (dados)=>{
+        const { chave, acao } = dados;
+
+        if(acao=='+') jogadores[chave].resistencia++;
+        if(acao=='-') jogadores[chave].resistencia--;
+
+        io.emit('atualizarJogadores', jogadores);
+
+        console.log(jogadores[chave], acao);
+    });
     
     // Quando o jogador se desconectar
     socket.on('disconnect', () => { jogadorDesconectado(socket) });
