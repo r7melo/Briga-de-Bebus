@@ -64,17 +64,9 @@ io.on('connection', (socket) => {
             io.emit('atualizarJogadores', jogadores); 
         }
 
-    
-        console.log('\n'+rodadaAtual());
-        Object.entries(jogadores).forEach(([chave, jogador]) => {
-            console.log(`Chave: ${chave}, ID: ${jogador.id}, Jogadas: ${jogador.jogadas}`);
-        });
-        
-
         io.emit('definirCor', jogadores[socket.id]);
         
-
-        console.log('Novo jogador conectado:', socket.id);
+        console.log(`[${socket.id}] Novo jogador conectado: ${jogadores[socket.id].nome}`);
     });
     
     // Espera o nome ser enviado para o jogador ser considerado
@@ -164,6 +156,8 @@ io.on('connection', (socket) => {
             io.emit('resultadoDado', jogadores[socket.id]);
 
         }
+
+        console.log(jogadores)
     });
     
 
@@ -186,7 +180,7 @@ io.on('connection', (socket) => {
             
             jogadores[socket.id].nome = "";
             io.emit('atualizarJogadores', jogadores);  // Atualizar todos os jogadores
-            console.log('Jogador desconectado:', socket.id);
+            console.log(`[${socket.id}] Jogador desconectado: ${jogadores[socket.id].nome}`);
             
         }
 
@@ -203,7 +197,7 @@ function passarDado() {
 
 function rodadaAtual() {
     const chave = Object.keys(jogadores).filter(id => jogadores[id].nome && jogadores[id].nome.trim() !== '').sort((a, b) => jogadores[b].jogadas - jogadores[a].jogadas)[0];
-    if(jogadores[chave]) return jogadores[chave].jogadas-1;
+    if(jogadores[chave]) return jogadores[chave].jogadas;
     else return 0;
 }
 

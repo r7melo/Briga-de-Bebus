@@ -1,5 +1,5 @@
-
 document.addEventListener("DOMContentLoaded", function() {
+
     function entrarEmTelaCheia() {
         let elem = document.documentElement;
         if (elem.requestFullscreen) elem.requestFullscreen();
@@ -7,10 +7,12 @@ document.addEventListener("DOMContentLoaded", function() {
         else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
         else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
     }
+
     entrarEmTelaCheia();
 });
 
 screen.orientation.lock("portrait").catch(err => console.log(err));
+
 
 // Função para gerar um identificador único
 function gerarIdUnico() {
@@ -45,17 +47,6 @@ fundo.src = 'background.png';
 
 socket.emit('criarJogador', dispositivoId); 
 
-fundo.onload = function() {
-
-    document.getElementById('nomeJogador').addEventListener('input', function() {
-        const nomeJogador = document.getElementById('nomeJogador').value.trim();
-        if (nomeJogador) {
-            socket.emit('editarNome', nomeJogador); 
-        }
-    });
-
-};
-
 socket.on('definirCor', (jogador) => {
 
     if(jogador.id == dispositivoId){
@@ -86,16 +77,35 @@ socket.on('resultadoDado', (jogador) => {
 });
 
 
+document.getElementById('nomeJogador').addEventListener('input', editarNomeJogador);
+document.getElementById('up').addEventListener('click', ()=> moverJogador('cima'));
+document.getElementById('down').addEventListener('click', ()=> moverJogador('baixo'));
+document.getElementById('left').addEventListener('click', ()=> moverJogador('esquerda'));
+document.getElementById('right').addEventListener('click', ()=> moverJogador('direita'));
+document.getElementById('dado').addEventListener('click', jogarDado);
+document.getElementById('dado').addEventListener('click', renovarDispositivoId);
 
-document.getElementById('up').addEventListener('click', function() {mover('cima');});
-document.getElementById('down').addEventListener('click', function() {mover('baixo');});
-document.getElementById('left').addEventListener('click', function() {mover('esquerda');});
-document.getElementById('right').addEventListener('click', function() {mover('direita');});
-document.getElementById('dado').addEventListener('click', function() { socket.emit('jogarDado'); });
-
-function mover(direcao) {
+function moverJogador(direcao) {
     socket.emit('mover', direcao);
 }
 
+function jogarDado() {
+    socket.emit('jogarDado');
+}
 
+function editarNomeJogador() {
+    const nomeJogador = document.getElementById('nomeJogador').value.trim();
+    if (nomeJogador) {
+        socket.emit('editarNome', nomeJogador); 
+    }
+}
 
+function renovarDispositivoId() {
+    const nomeJogador = document.getElementById('nomeJogador').value.trim();
+        
+    if (nomeJogador === 'reset') {
+        localStorage.clear();
+        alert('Dados resetados!');
+        location.reload();
+    }
+}

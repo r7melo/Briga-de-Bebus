@@ -11,7 +11,7 @@ let jogadorNome = '';
 let jogadorValido = false;
 
 const fundo = new Image();
-fundo.src = 'background.png';
+fundo.src = '../images/background.png';
 ctx.clearRect(0, 0, canvas.width, canvas.height);
 ctx.drawImage(fundo, 0, 0, canvas.width, canvas.height);
 
@@ -56,19 +56,10 @@ function atualizarListaJogadores(jogadores) {
                 li.classList.add('selected');
             }
 
-            // // Adiciona um event listener para clique
-            // li.addEventListener('click', () => {
-            //     // Remove a classe "selected" de todos os itens
-            //     document.querySelectorAll('.player-list').forEach(item => {
-            //         item.classList.remove('selected');
-            //     });
-
-            //     // Adiciona a classe "selected" ao item clicado
-            //     li.classList.add('selected');
-
-            //     // Emitir o evento para o socket
-            //     socket.emit('darDado', id);
-            // });
+            // Adiciona um event listener para clique
+            li.addEventListener('click', () => {
+                alert(JSON.stringify(jogador, null, 2));
+            });
 
             playerList.appendChild(li);
         }
