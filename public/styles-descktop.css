@@ -59,18 +59,6 @@ h3 {
     width: 80%;
 }
 
-#salvarButton {
-    padding: 10px;
-    background-color: #4CAF50;
-    color: white;
-    font-size: 1rem;
-    border: none;
-    cursor: pointer;
-}
-
-#salvarButton:hover {
-    background-color: #45a049;
-}
 
 /* Estilo padrão dos itens da lista */
 .player-list li {
@@ -82,5 +70,5 @@ h3 {
 
 /* Classe para destacar o item selecionado */
 .player-list li.selected {
-    border: 5px solid rgb(255, 60, 0);
+    border: 10px solid rgb(3, 255, 138);
 }

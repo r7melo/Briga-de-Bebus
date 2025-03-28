@@ -25,15 +25,19 @@ function desenharJogo(jogadores) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(fundo, 0, 0, canvas.width, canvas.height);
 
-    Object.entries(jogadores).forEach(([id, jogador]) => {
+    if(jogadores){
+        Object.entries(jogadores).forEach(([id, jogador]) => {
         
-        if(jogador.nome){
-            ctx.fillStyle = jogador.cor;
-            ctx.fillRect((jogador.corpo.x* tamanhoQuadrado)+5, (jogador.corpo.y * tamanhoQuadrado)+5, tamanhoQuadrado-10, tamanhoQuadrado-10);
+            if(jogador.nome){
+                ctx.fillStyle = jogador.cor;
+    
+                ctx.fillRect((jogador.corpo.x* tamanhoQuadrado)+5, (jogador.corpo.y * tamanhoQuadrado)+5, tamanhoQuadrado-10, tamanhoQuadrado-10);
+                
+            }
             
-        }
-        
-    });
+        });
+    }
+    
 }
 
 function atualizarListaJogadores(jogadores) {
@@ -44,7 +48,7 @@ function atualizarListaJogadores(jogadores) {
             const li = document.createElement('li');
             li.textContent = `${jogador.nome}`;
             li.style.backgroundColor = jogador.cor;
-            li.style.color = "#fff";
+            li.style.color = "#333333";
             li.classList.add("player-list");
 
             // Se o jogador tiver comDado: true, adicionar classe "selected"
@@ -52,19 +56,19 @@ function atualizarListaJogadores(jogadores) {
                 li.classList.add('selected');
             }
 
-            // Adiciona um event listener para clique
-            li.addEventListener('click', () => {
-                // Remove a classe "selected" de todos os itens
-                document.querySelectorAll('.player-list').forEach(item => {
-                    item.classList.remove('selected');
-                });
+            // // Adiciona um event listener para clique
+            // li.addEventListener('click', () => {
+            //     // Remove a classe "selected" de todos os itens
+            //     document.querySelectorAll('.player-list').forEach(item => {
+            //         item.classList.remove('selected');
+            //     });
 
-                // Adiciona a classe "selected" ao item clicado
-                li.classList.add('selected');
+            //     // Adiciona a classe "selected" ao item clicado
+            //     li.classList.add('selected');
 
-                // Emitir o evento para o socket
-                socket.emit('darDado', id);
-            });
+            //     // Emitir o evento para o socket
+            //     socket.emit('darDado', id);
+            // });
 
             playerList.appendChild(li);
         }

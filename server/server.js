@@ -31,18 +31,39 @@ io.on('connection', (socket) => {
 
     io.emit('atualizarJogadores', jogadores); 
 
-    socket.on('criarJogador', (e) => {
+    socket.on('criarJogador', (id) => {
 
-        jogadores[socket.id] = {
-            id: socket.id,
-            nome: null,
-            cor: gerarCorAleatoria(),
-            corpo: lista[Math.floor(Math.random() * lista.length)],
-            passos: 0,
-            jogadas: 0,
-            comDado: !temJogadorComDado(jogadores),
-            casaPassada: null
+        const chave = buscarChavePorId(id);
+
+        if (!jogadores[chave]) {
+            jogadores[socket.id] = {
+                id: id,
+                nome: id,
+                cor: gerarCorAleatoria(),
+                corpo: lista[Math.floor(Math.random() * lista.length)],
+                passos: 0,
+                jogadas: passarDado()?.jogadas ?? 0,
+                comDado: !temJogadorComDado(jogadores),
+                casaPassada: null
+            }
+
+            io.emit('atualizarJogadores', jogadores);  
+
+        } else {
+
+            jogadores[socket.id] = JSON.parse(JSON.stringify(jogadores[chave]));
+            delete(jogadores[chave])
+
+            jogadores[socket.id].id = id;
+            jogadores[socket.id].nome = id;
+            jogadores[socket.id].cor = gerarCorAleatoria();
+            jogadores[socket.id].jogadas = passarDado()?.jogadas ?? 0,
+            jogadores[socket.id].comDado = !temJogadorComDado(jogadores);
+            jogadores[socket.id].passos = 0;
+
+            io.emit('atualizarJogadores', jogadores); 
         }
+
     
         io.emit('definirCor', jogadores[socket.id]);
         
@@ -75,60 +96,65 @@ io.on('connection', (socket) => {
     // Quando um jogador se move
     socket.on('mover', (direcao) => {
 
-        let jogador = JSON.parse(JSON.stringify(jogadores[socket.id]));
+        if (jogadores[socket.id] && jogadores[socket.id].nome != null && jogadores[socket.id].nome != ''){
 
-        // Verifica qual direção foi recebida
-        if (jogador) {
+            let jogador = JSON.parse(JSON.stringify(jogadores[socket.id]));
 
-            switch(direcao) {
-                case 'cima':
-                    jogador.corpo.y--; // Move para cima, diminui o valor de y
-                    jogador.casaPassada = 'baixo';
-                    break;
-                case 'baixo':
-                    jogador.corpo.y++; // Move para baixo, aumenta o valor de y
-                    jogador.casaPassada = 'cima';
-                    break;
-                case 'esquerda':
-                    jogador.corpo.x--; // Move para a esquerda, diminui o valor de x
-                    jogador.casaPassada = 'direita';
-                    break;
-                case 'direita':
-                    jogador.corpo.x++; // Move para a direita, aumenta o valor de x
-                    jogador.casaPassada = 'esquerda';
-                    break;
-            }
-            
-            const x = jogador.corpo.x;
-            const y = jogador.corpo.y;
-            
-
-            if ((mapa[y][x] == 1) && (jogadores[socket.id].casaPassada != direcao) && (jogador.passos > 0)) {
-
-                jogador.passos--;
-                jogadores[socket.id] = jogador;
-                
-                if (jogador.passos == 0) {
-                    jogador.passos = '🎲'
-                    proximo_jogador = passarDado();
-                    jogadores[proximo_jogador].comDado = true;
+            // Verifica qual direção foi recebida
+            if (jogador) {
+    
+                switch(direcao) {
+                    case 'cima':
+                        jogador.corpo.y--; // Move para cima, diminui o valor de y
+                        jogador.casaPassada = 'baixo';
+                        break;
+                    case 'baixo':
+                        jogador.corpo.y++; // Move para baixo, aumenta o valor de y
+                        jogador.casaPassada = 'cima';
+                        break;
+                    case 'esquerda':
+                        jogador.corpo.x--; // Move para a esquerda, diminui o valor de x
+                        jogador.casaPassada = 'direita';
+                        break;
+                    case 'direita':
+                        jogador.corpo.x++; // Move para a direita, aumenta o valor de x
+                        jogador.casaPassada = 'esquerda';
+                        break;
                 }
-
-                io.emit('resultadoDado', jogador);
-                io.emit('atualizarJogadores', jogadores);
-
-
+                
+                const x = jogador.corpo.x;
+                const y = jogador.corpo.y;
+                
+    
+                if ((mapa[y][x] == 1) && (jogadores[socket.id].casaPassada != direcao) && (jogador.passos > 0)) {
+    
+                    jogador.passos--;
+                    jogadores[socket.id] = jogador;
+                    
+                    if (jogador.passos == 0) {
+                        jogadores[socket.id].comDado = false;
+                        proximo_jogador = passarDado();
+                        jogadores[proximo_jogador].comDado = true;
+                    }
+    
+                    io.emit('resultadoDado', jogador);
+                    io.emit('atualizarJogadores', jogadores);
+                    
+                    console.log(jogadores)
+    
+                }
+                
             }
-            
         }
+        
     });
 
-    socket.on('jogarDado', (direcao) => {
-        if (jogadores[socket.id] && jogadores[socket.id].comDado) {
+    socket.on('jogarDado', () => {
+
+        if (jogadores[socket.id] && jogadores[socket.id].comDado && jogadores[socket.id].nome != '' && jogadores[socket.id].nome != null){
         
             dado = jogarDado()
             jogadores[socket.id].passos = dado;
-            jogadores[socket.id].comDado = false;
             jogadores[socket.id].jogadas++;
             io.emit('resultadoDado', jogadores[socket.id]);
 
@@ -136,17 +162,31 @@ io.on('connection', (socket) => {
     });
     
 
-    socket.on('darDado', (id) => {
-        if (jogadores[id]) {
-            jogadores[id].comDado = true;
-        }
-    });
-
     // Quando o jogador se desconectar
     socket.on('disconnect', () => {
-        console.log('Jogador desconectado:', socket.id);
-        delete jogadores[socket.id];
-        io.emit('atualizarJogadores', jogadores);  // Atualizar todos os jogadores
+
+        if(jogadores[socket.id]) {
+
+            if(jogadores[socket.id].comDado){
+                proximo_jogador = passarDado();
+
+                if (proximo_jogador && jogadores[proximo_jogador]) {
+                    jogadores[proximo_jogador].comDado = true;
+                }
+                
+                jogadores[socket.id].comDado = false;
+            }
+
+            
+            
+            removerCorUsada(jogadores[socket.id].cor);
+            jogadores[socket.id].nome = "";
+            io.emit('atualizarJogadores', jogadores);  // Atualizar todos os jogadores
+            console.log('Jogador desconectado:', socket.id);
+            
+            console.log(jogadores)
+        }
+
     });
 });
 
@@ -155,12 +195,14 @@ function jogarDado() {
 }
 
 function passarDado() {
-    return Object.keys(jogadores).reduce((menorId, id) => jogadores[id].jogadas < jogadores[menorId].jogadas ? id : menorId, Object.keys(jogadores)[0]);
+    return Object.keys(jogadores).filter(id => jogadores[id].nome && jogadores[id].nome.trim() !== '').sort((a, b) => jogadores[a].jogadas - jogadores[b].jogadas)[0];
 }
 
+
 function temJogadorComDado(jogadores) {
-    return !!(jogadores && Object.values(jogadores).some(jogador => jogador.comDado));
+    return !!(jogadores && Object.values(jogadores).some(jogador => jogador.comDado && jogador.nome && jogador.nome.trim() !== ''));
 }
+
 
 
 
@@ -175,6 +217,27 @@ function gerarCorAleatoria() {
     return cor;
 }
 
+// Função para buscar a chave de um jogador baseado no id
+function buscarChavePorId(id) {
+    // Itera sobre as entradas (chave, valor) do objeto jogadores
+    const entrada = Object.entries(jogadores).find(([chave, jogador]) => jogador.id === id);
+    
+    // Se encontrado, retorna a chave
+    if (entrada) {
+        return entrada[0]; // A chave está no primeiro elemento da entrada
+    }
+
+    return null; // Se não encontrado, retorna null
+}
+
+
+function removerCorUsada(cor) {
+    if (coresUsadas.has(cor)) {
+        coresUsadas.delete(cor);
+    } else {
+        console.warn(`Cor ${cor} não está na lista de usadas.`);
+    }
+}
 
 
 // Função para pegar o IP local da máquina
@@ -189,6 +252,8 @@ const getLocalIP = () => {
     }
     return '127.0.0.1'; // Retorna o IP de localhost se não encontrar
 };
+
+
 
 
 

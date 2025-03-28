@@ -12,6 +12,24 @@ document.addEventListener("DOMContentLoaded", function() {
 
 screen.orientation.lock("portrait").catch(err => console.log(err));
 
+// Função para gerar um identificador único
+function gerarIdUnico() {
+    return 'id-' + Math.random().toString(36);
+}
+
+// Verifica se já existe um ID no localStorage
+let dispositivoId = localStorage.getItem('dispositivoId');
+
+// Se não existir, gera um novo ID e armazena no localStorage
+if (!dispositivoId) {
+    dispositivoId = gerarIdUnico();
+    localStorage.setItem('dispositivoId', dispositivoId);  // Armazenar o ID gerado
+}
+
+// Exibe o ID único
+console.log("ID do dispositivo: ", dispositivoId);
+
+
 const socket = io();  // Conectar-se ao servidor
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
@@ -25,7 +43,7 @@ const altura = canvas.height / tamanhoQuadrado;
 const fundo = new Image();
 fundo.src = 'background.png';
 
-socket.emit('criarJogador', 0); 
+socket.emit('criarJogador', dispositivoId); 
 
 fundo.onload = function() {
 
@@ -40,22 +58,26 @@ fundo.onload = function() {
 
 socket.on('definirCor', (jogador) => {
 
-    if(jogador.id == socket.id){
+    if(jogador.id == dispositivoId){
         document.querySelectorAll("button").forEach(btn => {
             btn.style.backgroundColor = jogador.cor;
         });
+
+        document.getElementById('nomeJogador').value = jogador.nome;
     }
 });
 
 socket.on('resultadoDado', (jogador) => {
 
-    if(jogador.id == socket.id){
+    if(jogador.id == dispositivoId && jogador.nome != null){
 
         const dadoButton = document.getElementById("dado");
         dadoButton.innerText = jogador.passos;
         
-        if (jogador.passos === '🎲') {
+        if (jogador.passos == 0) {
             dadoButton.disabled = false;
+            dadoButton.innerText = '🎲';
+
         } else {
             dadoButton.disabled = true;
         }
@@ -63,28 +85,6 @@ socket.on('resultadoDado', (jogador) => {
     }
 });
 
-
-function desenharJogo(jogadores) {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(fundo, 0, 0, canvas.width, canvas.height);
-
-    jogadores.forEach(cobra => {
-        ctx.fillStyle = cobra.cor;
-        cobra.corpo.forEach(parte => {
-            ctx.fillRect(parte.x * tamanhoQuadrado, parte.y * tamanhoQuadrado, tamanhoQuadrado, tamanhoQuadrado);
-        });
-    });
-}
-
-function atualizarListaJogadores(jogadores) {
-    playerList.innerHTML = '';  // Limpar a lista atual
-
-    jogadores.forEach(jogador => {
-        const li = document.createElement('li');
-        li.textContent = jogador.id + " - " + jogador.cor;  // Exibe o ID e a cor do jogador
-        playerList.appendChild(li);
-    });
-}
 
 
 document.getElementById('up').addEventListener('click', function() {mover('cima');});
