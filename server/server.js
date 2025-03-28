@@ -140,7 +140,6 @@ io.on('connection', (socket) => {
                     io.emit('resultadoDado', jogador);
                     io.emit('atualizarJogadores', jogadores);
                     
-                    console.log(jogadores)
     
                 }
                 
@@ -179,12 +178,10 @@ io.on('connection', (socket) => {
 
             
             
-            removerCorUsada(jogadores[socket.id].cor);
             jogadores[socket.id].nome = "";
             io.emit('atualizarJogadores', jogadores);  // Atualizar todos os jogadores
             console.log('Jogador desconectado:', socket.id);
             
-            console.log(jogadores)
         }
 
     });
@@ -230,14 +227,6 @@ function buscarChavePorId(id) {
     return null; // Se não encontrado, retorna null
 }
 
-
-function removerCorUsada(cor) {
-    if (coresUsadas.has(cor)) {
-        coresUsadas.delete(cor);
-    } else {
-        console.warn(`Cor ${cor} não está na lista de usadas.`);
-    }
-}
 
 
 // Função para pegar o IP local da máquina
