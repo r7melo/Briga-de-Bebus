@@ -26,169 +26,141 @@ const jogadores = {};  // Armazena todos os jogadores
 
 app.use(express.static('public'));  // Servir os arquivos estáticos da pasta 'public'
 
-
 io.on('connection', (socket) => {
 
+    // Para carregar a página descktop
     io.emit('atualizarJogadores', jogadores); 
-
-    socket.on('criarJogador', (id) => {
-
-        const chave = buscarChavePorId(id);
-
-        if (!jogadores[chave]) {
-            jogadores[socket.id] = {
-                id: id,
-                nome: id,
-                cor: gerarCorAleatoria(),
-                corpo: lista[Math.floor(Math.random() * lista.length)],
-                passos: 0,
-                jogadas: rodadaAtual(),
-                comDado: !temJogadorComDado(jogadores),
-                casaPassada: null
-            }
-
-            io.emit('atualizarJogadores', jogadores);  
-
-        } else {
-
-            jogadores[socket.id] = JSON.parse(JSON.stringify(jogadores[chave]));
-            delete(jogadores[chave])
-
-            jogadores[socket.id].id = id;
-            jogadores[socket.id].nome = id;
-            jogadores[socket.id].cor = gerarCorAleatoria();
-            jogadores[socket.id].jogadas = rodadaAtual(),
-            jogadores[socket.id].comDado = !temJogadorComDado(jogadores);
-            jogadores[socket.id].passos = 0;
-
-            io.emit('atualizarJogadores', jogadores); 
-        }
-
-        io.emit('definirCor', jogadores[socket.id]);
-        
-        console.log(`[${socket.id}] Novo jogador conectado: ${jogadores[socket.id].nome}`);
-    });
     
-    // Espera o nome ser enviado para o jogador ser considerado
-    socket.on('editarNome', (novoNome) => {
-        // Verifica se o jogador existe antes de tentar modificar o nome
-        if (jogadores[socket.id]) {
-            // Verifica se já existe algum jogador com o mesmo nome
-            const jogadorExistente = Object.values(jogadores).find(jogador => jogador.nome === novoNome);
-
-            if (!jogadorExistente) {
-                // Atribui o novo nome ao jogador
-                jogadores[socket.id].nome = novoNome;
-                io.emit('atualizarJogadores', jogadores);  // Atualiza todos os jogadores com o novo nome
-            } else {
-                // Caso já exista um jogador com o mesmo nome
-                socket.emit('erroNome', 'Já existe um jogador com esse nome');
-            }
-        } else {
-            // Caso o jogador não exista no objeto jogadores
-            socket.emit('erroNome', 'Jogador não encontrado');
-        }
-    });
-
-
-    // Quando um jogador se move
-    socket.on('mover', (direcao) => {
-
-        if (jogadores[socket.id] && jogadores[socket.id].nome != null && jogadores[socket.id].nome != ''){
-
-            let jogador = JSON.parse(JSON.stringify(jogadores[socket.id]));
-
-            // Verifica qual direção foi recebida
-            if (jogador) {
+    // Recepção da página mobile
+    socket.on('criarJogador', (id) => { criarJogador(socket, id) });
+    socket.on('editarNome', (novoNome) => { editarNome(socket, novoNome) });
+    socket.on('mover', (direcao) => { moverJogador(socket, direcao) });
+    socket.on('jogarDado', () => { jogarDado(socket) });
     
-                switch(direcao) {
-                    case 'cima':
-                        jogador.corpo.y--; // Move para cima, diminui o valor de y
-                        jogador.casaPassada = 'baixo';
-                        break;
-                    case 'baixo':
-                        jogador.corpo.y++; // Move para baixo, aumenta o valor de y
-                        jogador.casaPassada = 'cima';
-                        break;
-                    case 'esquerda':
-                        jogador.corpo.x--; // Move para a esquerda, diminui o valor de x
-                        jogador.casaPassada = 'direita';
-                        break;
-                    case 'direita':
-                        jogador.corpo.x++; // Move para a direita, aumenta o valor de x
-                        jogador.casaPassada = 'esquerda';
-                        break;
-                }
-                
-                const x = jogador.corpo.x;
-                const y = jogador.corpo.y;
-                
-    
-                if ((mapa[y][x] != 0) && (jogadores[socket.id].casaPassada != direcao) && (jogador.passos > 0)) {
-    
-                    jogador.passos--;
-                    jogadores[socket.id] = jogador;
-                    
-                    if (jogador.passos == 0) {
-                        jogadores[socket.id].comDado = false;
-                        proximo_jogador = passarDado();
-                        jogadores[proximo_jogador].comDado = true;
-                    }
-    
-                    io.emit('resultadoDado', jogador);
-                    io.emit('atualizarJogadores', jogadores);
-                    
-    
-                }
-                
-            }
-        }
-        
-    });
-
-    socket.on('jogarDado', () => {
-
-        if (jogadores[socket.id] && jogadores[socket.id].comDado && jogadores[socket.id].nome != '' && jogadores[socket.id].nome != null){
-        
-            dado = jogarDado()
-            jogadores[socket.id].passos = dado;
-            jogadores[socket.id].jogadas++;
-            io.emit('resultadoDado', jogadores[socket.id]);
-
-        }
-
-        console.log(jogadores)
-    });
-    
-
     // Quando o jogador se desconectar
-    socket.on('disconnect', () => {
-
-        if(jogadores[socket.id]) {
-
-            if(jogadores[socket.id].comDado){
-                proximo_jogador = passarDado();
-
-                if (proximo_jogador && jogadores[proximo_jogador]) {
-                    jogadores[proximo_jogador].comDado = true;
-                }
-                
-                jogadores[socket.id].comDado = false;
-            }
-
-            
-            
-            jogadores[socket.id].nome = "";
-            io.emit('atualizarJogadores', jogadores);  // Atualizar todos os jogadores
-            console.log(`[${socket.id}] Jogador desconectado: ${jogadores[socket.id].nome}`);
-            
-        }
-
-    });
+    socket.on('disconnect', () => { jogadorDesconectado(socket) });
 });
 
-function jogarDado() {
-    return Math.floor(Math.random() * 6) + 1;
+function criarJogador(socket, id) {
+    const chave = buscarChavePorId(id);
+
+    if (!jogadores[chave]) {
+        jogadores[socket.id] = {
+            id: id,
+            nome: id,
+            cor: gerarCorAleatoria(),
+            corpo: lista[Math.floor(Math.random() * lista.length)],
+            passos: 0,
+            jogadas: rodadaAtual(),
+            comDado: !temJogadorComDado(jogadores),
+            casaPassada: null
+        }
+
+        io.emit('atualizarJogadores', jogadores);  
+
+    } else {
+
+        jogadores[socket.id] = JSON.parse(JSON.stringify(jogadores[chave]));
+        delete(jogadores[chave])
+
+        jogadores[socket.id].id = id;
+        jogadores[socket.id].nome = id;
+        jogadores[socket.id].cor = gerarCorAleatoria();
+        jogadores[socket.id].jogadas = rodadaAtual(),
+        jogadores[socket.id].comDado = !temJogadorComDado(jogadores);
+        jogadores[socket.id].passos = 0;
+
+        io.emit('atualizarJogadores', jogadores); 
+    }
+
+    io.emit('definirCor', jogadores[socket.id]);
+    
+    console.log(`[${socket.id}] Novo jogador conectado: ${jogadores[socket.id].nome}`);
+}
+
+function editarNome(socket, novoNome) {
+    // Verifica se o jogador existe antes de tentar modificar o nome
+    if (jogadores[socket.id]) {
+        // Verifica se já existe algum jogador com o mesmo nome
+        const jogadorExistente = Object.values(jogadores).find(jogador => jogador.nome === novoNome);
+
+        if (!jogadorExistente) {
+            // Atribui o novo nome ao jogador
+            jogadores[socket.id].nome = novoNome;
+            io.emit('atualizarJogadores', jogadores);  // Atualiza todos os jogadores com o novo nome
+        } else {
+            // Caso já exista um jogador com o mesmo nome
+            socket.emit('erroNome', 'Já existe um jogador com esse nome');
+        }
+    } else {
+        // Caso o jogador não exista no objeto jogadores
+        socket.emit('erroNome', 'Jogador não encontrado');
+    }
+}
+
+function moverJogador(socket, direcao){
+
+    if (jogadores[socket.id] && jogadores[socket.id].nome != null && jogadores[socket.id].nome != ''){
+
+        let jogador = JSON.parse(JSON.stringify(jogadores[socket.id]));
+
+        // Verifica qual direção foi recebida
+        if (jogador) {
+
+            switch(direcao) {
+                case 'cima':
+                    jogador.corpo.y--; // Move para cima, diminui o valor de y
+                    jogador.casaPassada = 'baixo';
+                    break;
+                case 'baixo':
+                    jogador.corpo.y++; // Move para baixo, aumenta o valor de y
+                    jogador.casaPassada = 'cima';
+                    break;
+                case 'esquerda':
+                    jogador.corpo.x--; // Move para a esquerda, diminui o valor de x
+                    jogador.casaPassada = 'direita';
+                    break;
+                case 'direita':
+                    jogador.corpo.x++; // Move para a direita, aumenta o valor de x
+                    jogador.casaPassada = 'esquerda';
+                    break;
+            }
+            
+            const x = jogador.corpo.x;
+            const y = jogador.corpo.y;
+            
+
+            if ((mapa[y][x] != 0) && (jogadores[socket.id].casaPassada != direcao) && (jogador.passos > 0)) {
+
+                jogador.passos--;
+                jogadores[socket.id] = jogador;
+                
+                if (jogador.passos == 0) {
+                    jogadores[socket.id].comDado = false;
+                    proximo_jogador = passarDado();
+                    jogadores[proximo_jogador].comDado = true;
+                }
+
+                io.emit('resultadoDado', jogador);
+                io.emit('atualizarJogadores', jogadores);
+                
+
+            }
+            
+        }
+    }    
+}
+
+function jogarDado(socket) {
+
+    if (jogadores[socket.id] && jogadores[socket.id].comDado && jogadores[socket.id].nome != '' && jogadores[socket.id].nome != null){
+        
+        dado = Math.floor(Math.random() * 6) + 1;
+        jogadores[socket.id].passos = dado;
+        jogadores[socket.id].jogadas++;
+        io.emit('resultadoDado', jogadores[socket.id]);
+
+    }
 }
 
 function passarDado() {
@@ -201,14 +173,9 @@ function rodadaAtual() {
     else return 0;
 }
 
-
 function temJogadorComDado(jogadores) {
     return !!(jogadores && Object.values(jogadores).some(jogador => jogador.comDado && jogador.nome && jogador.nome.trim() !== ''));
 }
-
-
-
-
 
 // Função de gerar cor aleatória
 function gerarCorAleatoria() {
@@ -233,7 +200,28 @@ function buscarChavePorId(id) {
     return null; // Se não encontrado, retorna null
 }
 
+function jogadorDesconectado(socket) {
 
+    if(jogadores[socket.id]) {
+
+        if(jogadores[socket.id].comDado){
+            proximo_jogador = passarDado();
+
+            if (proximo_jogador && jogadores[proximo_jogador]) {
+                jogadores[proximo_jogador].comDado = true;
+            }
+            
+            jogadores[socket.id].comDado = false;
+        }
+
+        
+        
+        jogadores[socket.id].nome = "";
+        io.emit('atualizarJogadores', jogadores);  // Atualizar todos os jogadores
+        console.log(`[${socket.id}] Jogador desconectado: ${jogadores[socket.id].nome}`);
+        
+    }
+}
 
 // Função para pegar o IP local da máquina
 const getLocalIP = () => {
@@ -247,10 +235,6 @@ const getLocalIP = () => {
     }
     return '127.0.0.1'; // Retorna o IP de localhost se não encontrar
 };
-
-
-
-
 
 server.listen(3000, () => {
     console.log(`Servidor rodando em ${getLocalIP()}:3000`);

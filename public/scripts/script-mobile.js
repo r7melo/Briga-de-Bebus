@@ -78,12 +78,13 @@ socket.on('resultadoDado', (jogador) => {
 
 
 document.getElementById('nomeJogador').addEventListener('input', editarNomeJogador);
+
 document.getElementById('up').addEventListener('click', ()=> moverJogador('cima'));
 document.getElementById('down').addEventListener('click', ()=> moverJogador('baixo'));
 document.getElementById('left').addEventListener('click', ()=> moverJogador('esquerda'));
 document.getElementById('right').addEventListener('click', ()=> moverJogador('direita'));
-document.getElementById('dado').addEventListener('click', jogarDado);
 document.getElementById('dado').addEventListener('click', renovarDispositivoId);
+document.getElementById('dado').addEventListener('click', jogarDado);
 
 function moverJogador(direcao) {
     socket.emit('mover', direcao);
