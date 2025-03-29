@@ -21,6 +21,13 @@ const lista = [
     {x: 22, y: 9},
 ];
 
+// Listas de adjetivos e substantivos
+const adjetivos = ['Furioso', 'Vingador', 'Mestre', 'Invencível', 'Feliz', 'Triste', 'Corajoso', 'Engraçado', 'Mágico', 'Rápido'];
+const substantivos = ['Panda', 'Cavalo', 'Abacaxi', 'Biscoito', 'Gato', 'Salsicha', 'Balde', 'Peixe', 'Pirata', 'Cachorro'];
+const listaNomesJogadores = new Set();
+let bancoResistencia = 8;
+
+
 
 const jogadores = {};  // Armazena todos os jogadores
 
@@ -36,10 +43,29 @@ io.on('connection', (socket) => {
     socket.on('editarNome', (novoNome) => { editarNome(socket, novoNome) });
     socket.on('mover', (direcao) => { moverJogador(socket, direcao) });
     socket.on('jogarDado', () => { jogarDado(socket) });
+
+    socket.on('configurarResistencia', (dados)=>{
+        const { chave, acao } = dados;
+
+        if(acao=='+' && bancoResistencia > 0) {
+            jogadores[chave].resistencia++;
+            bancoResistencia--;
+        }
+
+        if(acao=='-' && bancoResistencia <= 8) {
+            jogadores[chave].resistencia--;
+            bancoResistencia++;
+        }
+
+        io.emit('atualizarJogadores', jogadores);
+
+    });
     
     // Quando o jogador se desconectar
     socket.on('disconnect', () => { jogadorDesconectado(socket) });
 });
+
+
 
 function criarJogador(socket, id) {
     const chave = buscarChavePorId(id);
@@ -47,9 +73,10 @@ function criarJogador(socket, id) {
     if (!jogadores[chave]) {
         jogadores[socket.id] = {
             id: id,
-            nome: id,
+            nome: gerarNomeAleatorio(),
             cor: gerarCorAleatoria(),
             corpo: lista[Math.floor(Math.random() * lista.length)],
+            resistencia: 0,
             passos: 0,
             jogadas: rodadaAtual(),
             comDado: !temJogadorComDado(jogadores),
@@ -64,7 +91,8 @@ function criarJogador(socket, id) {
         delete(jogadores[chave])
 
         jogadores[socket.id].id = id;
-        jogadores[socket.id].nome = id;
+        jogadores[socket.id].nome = gerarNomeAleatorio();
+        jogadores[socket.id].resistencia = 0;
         jogadores[socket.id].cor = gerarCorAleatoria();
         jogadores[socket.id].jogadas = rodadaAtual(),
         jogadores[socket.id].comDado = !temJogadorComDado(jogadores);
@@ -128,7 +156,16 @@ function moverJogador(socket, direcao){
             
             const x = jogador.corpo.x;
             const y = jogador.corpo.y;
-            
+
+            const colididos = verificaColisao(jogador, jogadores);
+
+            colididos.forEach(id => {
+                if (jogadores[id].resistencia > 0) {
+                    jogadores[id].resistencia -= 1;  // Reduz 1 ponto de resistência
+                    jogador.resistencia++;
+                }
+            });
+
 
             if ((mapa[y][x] != 0) && (jogadores[socket.id].casaPassada != direcao) && (jogador.passos > 0)) {
 
@@ -136,9 +173,47 @@ function moverJogador(socket, direcao){
                 jogadores[socket.id] = jogador;
                 
                 if (jogador.passos == 0) {
+                    
                     jogadores[socket.id].comDado = false;
                     proximo_jogador = passarDado();
                     jogadores[proximo_jogador].comDado = true;
+
+                    switch(mapa[y][x]) {
+                        case 2: // bar
+
+                            if (jogador.resistencia < (Math.floor(Math.random() * 8) + 1)) {
+
+                                if (bancoResistencia > 0) {
+                                    jogador.resistencia++;
+                                    bancoResistencia--;
+    
+                                }
+
+                                var msg = `Jogador ${jogador.nome} tome uma dose.`;
+                                io.emit('acaoJogador', msg); 
+                            }
+
+                            break;
+
+                        case 3: // mercado
+                
+                            var msg = `Jogador ${jogador.nome} compre algo.`;
+                            io.emit('acaoJogador', msg); 
+                            break;
+
+                        case 4: //cabaré
+
+                            var msg = `Jogador ${jogador.nome} comece a dançar.`;
+                            io.emit('acaoJogador', msg); 
+                            break;
+                        
+                        case 5: //hotdog
+
+                            var msg = `Jogador ${jogador.nome} coma algo.`;
+                            io.emit('acaoJogador', msg); 
+                            break;
+
+                    }
                 }
 
                 io.emit('resultadoDado', jogador);
@@ -216,12 +291,36 @@ function jogadorDesconectado(socket) {
 
         
         
+        listaNomesJogadores.delete(jogadores[socket.id].nome);
         jogadores[socket.id].nome = "";
         io.emit('atualizarJogadores', jogadores);  // Atualizar todos os jogadores
         console.log(`[${socket.id}] Jogador desconectado: ${jogadores[socket.id].nome}`);
         
     }
 }
+
+// Função para gerar um nome aleatório
+function gerarNomeAleatorio() {
+    const adjetivo = adjetivos[Math.floor(Math.random() * adjetivos.length)];
+    const substantivo = substantivos[Math.floor(Math.random() * substantivos.length)];
+    const nomeGerado = `${adjetivo} ${substantivo}`;
+
+    if (listaNomesJogadores.has(nomeGerado)) {
+        return gerarNomeAleatorio();
+    }
+
+    listaNomesJogadores.add(nomeGerado);
+    return nomeGerado;
+}
+
+function verificaColisao(jogadorAtual, listaJogadores) {
+    const { x, y } = jogadorAtual.corpo;
+
+    return Object.entries(listaJogadores)
+        .filter(([id, jogador]) => jogador !== jogadorAtual && jogador.corpo.x === x && jogador.corpo.y === y)
+        .map(([id, _]) => id);  // Retorna apenas as chaves (IDs) dos jogadores colididos
+}
+
 
 // Função para pegar o IP local da máquina
 const getLocalIP = () => {
