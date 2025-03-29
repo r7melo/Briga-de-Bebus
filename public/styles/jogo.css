@@ -1,81 +1,91 @@
-/* Estilos gerais */
 body {
     margin: 0;
-    font-family: Arial, sans-serif;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    height: 100vh;
+    background-color: #111;
+    flex-direction: row;
+    align-items: flex-start;
+    font-family: 'Arial', sans-serif;
+    background-color: #f0f0f0;
 }
-
-#game {
+.game-container {
     position: relative;
     width: 100vw;
     height: 100vh;
     overflow: hidden;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    border: 2px solid white;
 }
-
-#map {
-    position: relative;
-    width: 1000px;
-    height: 1000px;
-    background-color: #f0f0f0;
-    overflow: hidden;
-    transition: transform 0.3s ease;
-}
-
-/* Estilo para cada quadrado do mapa */
-.square {
+.map {
     position: absolute;
-    width: 25px;
-    height: 25px;
-    border: 1px solid #ddd;
-    background-color: #fff;
+    width: 2000px;
+    height: 2000px;
+    background: url('../images/background.png') no-repeat center center;
+    background-size: cover;
+    transition: transform 0.2s ease-out;
 }
-
-/* Mapa com zoom (expandido) */
-#map.zoomed {
-    transform: scale(4); /* 100px por quadrado, zoom de 4x */
-    transform-origin: center;
-}
-
-/* Personagem */
-#character {
+.character {
     position: absolute;
-    width: 25px;
-    height: 25px;
-    background-color: red; /* Personagem em vermelho */
-    z-index: 2; /* Para garantir que o personagem fique acima do mapa */
+    width: 50px;
+    height: 50px;
 }
-
-
-/* Barra inferior */
-#bottom-bar {
+#character1 {
+    background-color: red;
+}
+#character2 {
+    background-color: blue;
+}
+.toolbar {
     position: fixed;
     bottom: 0;
-    width: 100%;
-    background-color: #333;
-    color: #fff;
+    width: 99%;
+    height: 50px;
+    background: rgba(0, 0, 0, 0);
     display: flex;
     justify-content: space-between;
-    padding: 10px;
     align-items: center;
+    padding: 0 20px;
+    background-color: aliceblue;
 }
-
-#logo {
-    font-size: 18px;
-    padding-left: 20px;
-}
-
-.zoom-button, .fullscreen-button {
-    background-color: #555;
-    color: #fff;
-    padding: 10px;
-    border: none;
+.fullscreen-btn {
     cursor: pointer;
-    font-size: 16px;
+    width: 32px;
+    height: 32px;
 }
 
-.zoom-button:hover, .fullscreen-button:hover {
-    background-color: #888;
+.players-container {
+    flex: 0 0 25%;
+    padding: 20px;
+    background-color: #fff;
+    border-left: 2px solid #ddd;
+    height: 100vh;
+    overflow-y: auto;
+}
+
+.player-list {
+    list-style-type: none;
+    padding: 10px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.player-list li {
+    padding: 20px;
+    margin: 5px 0;
+    border-radius: 5px;
+    background-color: #e3e3e3;
+    text-align: center;
+    font-size: 1.2rem;
+}
+
+.player-list li.selected {
+    border-left: 20px solid rgb(0, 255, 0);
+}
+
+.player-list h1 {
+    text-align: center;
+    margin-bottom: 20px;
 }
