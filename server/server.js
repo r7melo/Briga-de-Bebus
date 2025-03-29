@@ -36,12 +36,32 @@ let bancoResistencia = 8;
 
 const jogadores = {};  // Armazena todos os jogadores
 
+
+for (let i=0; i < 10; i++) {
+    let code = generateId();
+
+    jogadores[code] = {
+        id: code,
+        name: gerarNomeAleatorio(),
+        color: null,
+        corpo: listSpawns[Math.floor(Math.random() * listSpawns.length)],
+        resistencia: 0,
+        passos: 0,
+        jogadas: rodadaAtual(),
+        comDado: !temJogadorComDado(jogadores),
+        casaPassada: null
+    }
+}
+
 app.use(express.static('public'));  // Servir os arquivos estáticos da pasta 'public'
 
 io.on('connection', (socket) => {
 
     // Para carregar a página descktop
     io.emit('atualizarJogadores', jogadores); 
+
+    // Emitir lista para o controle
+    io.emit('listCodes', Object.keys(jogadores));
     
     // Recepção da página mobile
     socket.on('criarJogador', (id) => { criarJogador(socket, id) });
@@ -73,6 +93,7 @@ io.on('connection', (socket) => {
 
 
 function criarJogador(socket, id) {
+    
     const chave = buscarChavePorId(id);
 
     if (!jogadores[chave]) {
@@ -302,6 +323,11 @@ function jogadorDesconectado(socket) {
         console.log(`[${socket.id}] Jogador desconectado: ${jogadores[socket.id].name}`);
         
     }
+}
+
+function generateId() {
+    const i = () => String.fromCharCode(65 + Math.floor(Math.random() * 26));
+    return i() + i() + i();
 }
 
 // Função para gerar um nome aleatório
