@@ -1,49 +1,102 @@
-// Função para alternar entre expandir e minimizar
-function toggleFullScreen() {
-    const gameContainer = document.getElementById('game-container');
-    const expandIcon = document.getElementById('expand-icon');
-    const minimizeIcon = document.getElementById('minimize-icon');
-    
-    // Verifica se o jogo já está em tela cheia
-    if (!document.fullscreenElement && !document.mozFullScreenElement && !document.webkitFullscreenElement) {
-        // Ativa o modo tela cheia
-        if (gameContainer.requestFullscreen) {
-            gameContainer.requestFullscreen();
-        } else if (gameContainer.mozRequestFullScreen) { // Firefox
-            gameContainer.mozRequestFullScreen();
-        } else if (gameContainer.webkitRequestFullscreen) { // Chrome, Safari
-            gameContainer.webkitRequestFullscreen();
-        }
+document.addEventListener("DOMContentLoaded", function() {
+
+    function entrarEmTelaCheia() {
+        let elem = document.documentElement;
+        if (elem.requestFullscreen) elem.requestFullscreen();
+        else if (elem.mozRequestFullScreen) elem.mozRequestFullScreen();
+        else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
+        else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
+    }
+
+    entrarEmTelaCheia();
+});
+
+screen.orientation.lock("portrait").catch(err => console.log(err));
+
+
+// Função para gerar um identificador único
+function gerarIdUnico() {
+    return 'usuario-' + Math.random().toString(36);
+}
+
+// Verifica se já existe um ID no localStorage
+let dispositivoId = localStorage.getItem('dispositivoId');
+
+// Se não existir, gera um novo ID e armazena no localStorage
+if (!dispositivoId) {
+    dispositivoId = gerarIdUnico();
+    localStorage.setItem('dispositivoId', dispositivoId);  // Armazenar o ID gerado
+}
+
+// Exibe o ID único
+console.log("ID do dispositivo: ", dispositivoId);
+
+
+const socket = io();  // Conectar-se ao servidor
+
+
+socket.emit('criarJogador', dispositivoId); 
+
+socket.on('definirCor', (jogador) => {
+
+    if(jogador.id == dispositivoId){
+        document.querySelectorAll("button").forEach(btn => {
+            btn.style.backgroundColor = jogador.color;
+        });
+
+        document.getElementById('nomeJogador').value = jogador.name;
+    }
+});
+
+socket.on('resultadoDado', (jogador) => {
+
+    if(jogador.id == dispositivoId && jogador.name != null){
+
+        const dadoButton = document.getElementById("dado");
+        dadoButton.innerText = jogador.passos;
         
-        // Muda o ícone para minimizar
-        expandIcon.style.display = 'none';
-        minimizeIcon.style.display = 'inline';
-    } else {
-        // Sai do modo tela cheia
-        if (document.exitFullscreen) {
-            document.exitFullscreen();
-        } else if (document.mozCancelFullScreen) { // Firefox
-            document.mozCancelFullScreen();
-        } else if (document.webkitExitFullscreen) { // Chrome, Safari
-            document.webkitExitFullscreen();
+        if (jogador.passos == 0) {
+            dadoButton.disabled = false;
+            dadoButton.innerText = '🎲';
+
+        } else {
+            dadoButton.disabled = true;
         }
-        
-        // Muda o ícone para expandir
-        expandIcon.style.display = 'inline';
-        minimizeIcon.style.display = 'none';
+
+    }
+});
+
+
+document.getElementById('nomeJogador').addEventListener('input', editarNomeJogador);
+
+document.getElementById('up').addEventListener('click', ()=> moverJogador('cima'));
+document.getElementById('down').addEventListener('click', ()=> moverJogador('baixo'));
+document.getElementById('left').addEventListener('click', ()=> moverJogador('esquerda'));
+document.getElementById('right').addEventListener('click', ()=> moverJogador('direita'));
+document.getElementById('dado').addEventListener('click', renovarDispositivoId);
+document.getElementById('dado').addEventListener('click', jogarDado);
+
+function moverJogador(direcao) {
+    socket.emit('mover', direcao);
+}
+
+function jogarDado() {
+    socket.emit('jogarDado');
+}
+
+function editarNomeJogador() {
+    const nomeJogador = document.getElementById('nomeJogador').value.trim();
+    if (nomeJogador) {
+        socket.emit('editarNome', nomeJogador); 
     }
 }
 
-// Detecta se o modo tela cheia foi encerrado
-document.addEventListener('fullscreenchange', () => {
-    const expandIcon = document.getElementById('expand-icon');
-    const minimizeIcon = document.getElementById('minimize-icon');
-    
-    if (document.fullscreenElement) {
-        expandIcon.style.display = 'none';
-        minimizeIcon.style.display = 'inline';
-    } else {
-        expandIcon.style.display = 'inline';
-        minimizeIcon.style.display = 'none';
+function renovarDispositivoId() {
+    const nomeJogador = document.getElementById('nomeJogador').value.trim();
+        
+    if (nomeJogador === 'reset') {
+        localStorage.clear();
+        alert('Dados resetados!');
+        location.reload();
     }
-});
+}

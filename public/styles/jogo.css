@@ -25,19 +25,19 @@ body {
     height: 2000px;
     background: url('../images/background.png') no-repeat center center;
     background-size: cover;
-    transition: transform 0.2s ease-out;
+    transition: transform 0.5s ease-out;
 }
+
 .character {
     position: absolute;
     width: 50px;
     height: 50px;
+    border-radius: 50%;
+
+    background: url('../images/persona-x.png') no-repeat center center;
+    background-size: cover;
 }
-#character1 {
-    background-color: red;
-}
-#character2 {
-    background-color: blue;
-}
+
 .toolbar {
     position: fixed;
     bottom: 0;
@@ -56,36 +56,116 @@ body {
     height: 32px;
 }
 
+
+/* Estilo do modal */
+#modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.modal-content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    width: 300px;
+    font-size: 18px;
+    color: #333;
+}
+
+.close-btn {
+    background-color: #FF5733;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.close-btn:hover {
+    background-color: #FF3300;
+}
+
+/* Container principal para os jogadores */
 .players-container {
-    flex: 0 0 25%;
+    flex: 0 0 25%; /* Limita a largura para 25% do container */
     padding: 20px;
     background-color: #fff;
     border-left: 2px solid #ddd;
     height: 100vh;
-    overflow-y: auto;
+    overflow-y: auto; /* Adiciona rolagem vertical caso o conteúdo ultrapasse a altura */
 }
 
+/* Lista de jogadores */
 .player-list {
     list-style-type: none;
     padding: 10px;
-    max-height: 80vh;
-    overflow-y: auto;
+    max-height: 80vh; /* Define o tamanho máximo da lista */
+    overflow-y: auto; /* Permite rolar caso a lista seja muito longa */
 }
 
+/* Estilos para cada item da lista (jogador) */
 .player-list li {
     padding: 20px;
     margin: 5px 0;
     border-radius: 5px;
-    background-color: #e3e3e3;
+    background-color: #e3e3e3; /* Cor de fundo dos itens */
     text-align: center;
     font-size: 1.2rem;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-left: 20px solid rgb(167, 167, 167);
 }
 
+/* Estilo quando o jogador está selecionado */
 .player-list li.selected {
-    border-left: 20px solid rgb(0, 255, 0);
+    border-left: 20px solid rgb(0, 255, 0); /* Adiciona uma borda verde ao lado do item selecionado */
 }
 
+/* Estilo do título (h1) da lista de jogadores */
 .player-list h1 {
     text-align: center;
     margin-bottom: 20px;
+}
+
+/* Estilo da barra de resistência */
+.resistencia-barra {
+    position: absolute;
+    bottom: 0; /* Fixa a barra na parte inferior do item */
+    left: 0;
+    height: 20px; /* Tamanho da barra de resistência */
+    background-color: rgb(0, 255, 0); /* Cor inicial da barra */
+    transition: width 0.3s; /* Transição suave na mudança da largura */
+    border-bottom-right-radius: 8px; /* Arredondamento no canto inferior direito */
+}
+
+/* Nome do jogador (span dentro do li) */
+span {
+    position: relative;
+    z-index: 2; /* Garante que o nome fique acima da barra de resistência */
+    font-weight: bold;
+    color: black;
+    flex-grow: 1; /* Faz o nome ocupar o espaço disponível */
+    text-align: center;
+}
+
+/* Estilo para jogadores sem resistência */
+li.sem-resistencia {
+    opacity: 0.5; /* Reduz a opacidade para mostrar que o jogador não tem resistência */
+}
+
+/* Modifica a cor da barra de resistência para vermelho quando o jogador está sem resistência */
+li.sem-resistencia .resistencia-barra {
+    background-color: red !important;
 }

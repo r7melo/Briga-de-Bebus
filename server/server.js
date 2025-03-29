@@ -9,17 +9,30 @@ const io = socketIo(server);
 
 const mapa = require('./mapa.js');
 
-const lista = [
-    {x: 20, y: 26},
-    {x: 19, y: 26},
-    {x: 18, y: 26},
-    {x: 17, y: 26},
-    {x: 18, y: 9},
-    {x: 19, y: 9},
-    {x: 20, y: 9},
-    {x: 21, y: 9},
-    {x: 22, y: 9},
-];
+const listSpawns = newListSpawns();
+
+function newListSpawns() {
+    const list = []; // Cria um array vazio
+
+    for (let x = 0; x < 40; x++) {
+        for (let y = 0; y < 40; y++) {
+            if (mapa[y][x] === 1) {
+                // Adiciona as coordenadas ao array
+                list.push({ x: x, y: y });
+            }
+        }
+    }
+
+    return list;
+}
+
+// Listas de adjetivos e substantivos
+const adjetivos = ['Furioso', 'Vingador', 'Mestre', 'Invencível', 'Feliz', 'Triste', 'Corajoso', 'Engraçado', 'Mágico', 'Rápido'];
+const substantivos = ['Panda', 'Cavalo', 'Abacaxi', 'Biscoito', 'Gato', 'Salsicha', 'Balde', 'Peixe', 'Pirata', 'Cachorro'];
+const listaNomesJogadores = new Set();
+
+let bancoResistencia = 8;
+
 
 
 const jogadores = {};  // Armazena todos os jogadores
@@ -36,10 +49,29 @@ io.on('connection', (socket) => {
     socket.on('editarNome', (novoNome) => { editarNome(socket, novoNome) });
     socket.on('mover', (direcao) => { moverJogador(socket, direcao) });
     socket.on('jogarDado', () => { jogarDado(socket) });
+
+    socket.on('configurarResistencia', (dados)=>{
+        const { chave, acao } = dados;
+
+        if(acao=='+' && bancoResistencia > 0) {
+            jogadores[chave].resistencia++;
+            bancoResistencia--;
+        }
+
+        if(acao=='-' && bancoResistencia <= 8) {
+            jogadores[chave].resistencia--;
+            bancoResistencia++;
+        }
+
+        io.emit('atualizarJogadores', jogadores);
+
+    });
     
     // Quando o jogador se desconectar
     socket.on('disconnect', () => { jogadorDesconectado(socket) });
 });
+
+
 
 function criarJogador(socket, id) {
     const chave = buscarChavePorId(id);
@@ -47,9 +79,10 @@ function criarJogador(socket, id) {
     if (!jogadores[chave]) {
         jogadores[socket.id] = {
             id: id,
-            nome: id,
-            cor: gerarCorAleatoria(),
-            corpo: lista[Math.floor(Math.random() * lista.length)],
+            name: gerarNomeAleatorio(),
+            color: gerarCorAleatoria(),
+            corpo: listSpawns[Math.floor(Math.random() * listSpawns.length)],
+            resistencia: 0,
             passos: 0,
             jogadas: rodadaAtual(),
             comDado: !temJogadorComDado(jogadores),
@@ -64,8 +97,9 @@ function criarJogador(socket, id) {
         delete(jogadores[chave])
 
         jogadores[socket.id].id = id;
-        jogadores[socket.id].nome = id;
-        jogadores[socket.id].cor = gerarCorAleatoria();
+        jogadores[socket.id].name = gerarNomeAleatorio();
+        jogadores[socket.id].resistencia = 0;
+        jogadores[socket.id].color = gerarCorAleatoria();
         jogadores[socket.id].jogadas = rodadaAtual(),
         jogadores[socket.id].comDado = !temJogadorComDado(jogadores);
         jogadores[socket.id].passos = 0;
@@ -75,21 +109,21 @@ function criarJogador(socket, id) {
 
     io.emit('definirCor', jogadores[socket.id]);
     
-    console.log(`[${socket.id}] Novo jogador conectado: ${jogadores[socket.id].nome}`);
+    console.log(`[${socket.id}] Novo jogador conectado: ${jogadores[socket.id].name}`);
 }
 
 function editarNome(socket, novoNome) {
     // Verifica se o jogador existe antes de tentar modificar o nome
     if (jogadores[socket.id]) {
         // Verifica se já existe algum jogador com o mesmo nome
-        const jogadorExistente = Object.values(jogadores).find(jogador => jogador.nome === novoNome);
+        const jogadorExistente = Object.values(jogadores).find(jogador => jogador.name === novoNome);
 
         if (!jogadorExistente) {
             // Atribui o novo nome ao jogador
-            jogadores[socket.id].nome = novoNome;
+            jogadores[socket.id].name = novoNome;
             io.emit('atualizarJogadores', jogadores);  // Atualiza todos os jogadores com o novo nome
         } else {
-            // Caso já exista um jogador com o mesmo nome
+            // Caso já exista um jogador com o mesmo name
             socket.emit('erroNome', 'Já existe um jogador com esse nome');
         }
     } else {
@@ -100,7 +134,7 @@ function editarNome(socket, novoNome) {
 
 function moverJogador(socket, direcao){
 
-    if (jogadores[socket.id] && jogadores[socket.id].nome != null && jogadores[socket.id].nome != ''){
+    if (jogadores[socket.id] && jogadores[socket.id].name != null && jogadores[socket.id].name != ''){
 
         let jogador = JSON.parse(JSON.stringify(jogadores[socket.id]));
 
@@ -128,7 +162,16 @@ function moverJogador(socket, direcao){
             
             const x = jogador.corpo.x;
             const y = jogador.corpo.y;
-            
+
+            const colididos = verificaColisao(jogador, jogadores);
+
+            colididos.forEach(id => {
+                if (jogadores[id].resistencia > 0) {
+                    jogadores[id].resistencia -= 1;  // Reduz 1 ponto de resistência
+                    jogador.resistencia++;
+                }
+            });
+
 
             if ((mapa[y][x] != 0) && (jogadores[socket.id].casaPassada != direcao) && (jogador.passos > 0)) {
 
@@ -136,9 +179,47 @@ function moverJogador(socket, direcao){
                 jogadores[socket.id] = jogador;
                 
                 if (jogador.passos == 0) {
+                    
                     jogadores[socket.id].comDado = false;
                     proximo_jogador = passarDado();
                     jogadores[proximo_jogador].comDado = true;
+
+                    switch(mapa[y][x]) {
+                        case 2: // bar
+
+                            if (jogador.resistencia < (Math.floor(Math.random() * 8) + 1)) {
+
+                                if (bancoResistencia > 0) {
+                                    jogador.resistencia++;
+                                    bancoResistencia--;
+    
+                                }
+
+                                var msg = `Jogador ${jogador.name} tome uma dose.`;
+                                io.emit('acaoJogador', msg); 
+                            }
+
+                            break;
+
+                        case 3: // mercado
+                
+                            var msg = `Jogador ${jogador.name} compre algo.`;
+                            io.emit('acaoJogador', msg); 
+                            break;
+
+                        case 4: //cabaré
+
+                            var msg = `Jogador ${jogador.name} comece a dançar.`;
+                            io.emit('acaoJogador', msg); 
+                            break;
+                        
+                        case 5: //hotdog
+
+                            var msg = `Jogador ${jogador.name} coma algo.`;
+                            io.emit('acaoJogador', msg); 
+                            break;
+
+                    }
                 }
 
                 io.emit('resultadoDado', jogador);
@@ -153,7 +234,7 @@ function moverJogador(socket, direcao){
 
 function jogarDado(socket) {
 
-    if (jogadores[socket.id] && jogadores[socket.id].comDado && jogadores[socket.id].nome != '' && jogadores[socket.id].nome != null){
+    if (jogadores[socket.id] && jogadores[socket.id].comDado && jogadores[socket.id].name != '' && jogadores[socket.id].name != null){
         
         dado = Math.floor(Math.random() * 6) + 1;
         jogadores[socket.id].passos = dado;
@@ -164,27 +245,27 @@ function jogarDado(socket) {
 }
 
 function passarDado() {
-    return Object.keys(jogadores).filter(id => jogadores[id].nome && jogadores[id].nome.trim() !== '').sort((a, b) => jogadores[a].jogadas - jogadores[b].jogadas)[0];
+    return Object.keys(jogadores).filter(id => jogadores[id].name && jogadores[id].name.trim() !== '').sort((a, b) => jogadores[a].jogadas - jogadores[b].jogadas)[0];
 }
 
 function rodadaAtual() {
-    const chave = Object.keys(jogadores).filter(id => jogadores[id].nome && jogadores[id].nome.trim() !== '').sort((a, b) => jogadores[b].jogadas - jogadores[a].jogadas)[0];
+    const chave = Object.keys(jogadores).filter(id => jogadores[id].name && jogadores[id].name.trim() !== '').sort((a, b) => jogadores[b].jogadas - jogadores[a].jogadas)[0];
     if(jogadores[chave]) return jogadores[chave].jogadas;
     else return 0;
 }
 
 function temJogadorComDado(jogadores) {
-    return !!(jogadores && Object.values(jogadores).some(jogador => jogador.comDado && jogador.nome && jogador.nome.trim() !== ''));
+    return !!(jogadores && Object.values(jogadores).some(jogador => jogador.comDado && jogador.name && jogador.name.trim() !== ''));
 }
 
 // Função de gerar cor aleatória
 function gerarCorAleatoria() {
     const letras = '0123456789ABCDEF';
-    let cor = '#';
+    let color = '#';
     for (let i = 0; i < 6; i++) {
-        cor += letras[Math.floor(Math.random() * 16)];
+        color += letras[Math.floor(Math.random() * 16)];
     }
-    return cor;
+    return color;
 }
 
 // Função para buscar a chave de um jogador baseado no id
@@ -216,12 +297,36 @@ function jogadorDesconectado(socket) {
 
         
         
-        jogadores[socket.id].nome = "";
+        listaNomesJogadores.delete(jogadores[socket.id].name);
+        jogadores[socket.id].name = "";
         io.emit('atualizarJogadores', jogadores);  // Atualizar todos os jogadores
-        console.log(`[${socket.id}] Jogador desconectado: ${jogadores[socket.id].nome}`);
+        console.log(`[${socket.id}] Jogador desconectado: ${jogadores[socket.id].name}`);
         
     }
 }
+
+// Função para gerar um nome aleatório
+function gerarNomeAleatorio() {
+    const adjetivo = adjetivos[Math.floor(Math.random() * adjetivos.length)];
+    const substantivo = substantivos[Math.floor(Math.random() * substantivos.length)];
+    const nomeGerado = `${substantivo} ${adjetivo}`;
+
+    if (listaNomesJogadores.has(nomeGerado)) {
+        return gerarNomeAleatorio();
+    }
+
+    listaNomesJogadores.add(nomeGerado);
+    return nomeGerado;
+}
+
+function verificaColisao(jogadorAtual, listaJogadores) {
+    const { x, y } = jogadorAtual.corpo;
+
+    return Object.entries(listaJogadores)
+        .filter(([id, jogador]) => jogador !== jogadorAtual && jogador.corpo.x === x && jogador.corpo.y === y)
+        .map(([id, _]) => id);  // Retorna apenas as chaves (IDs) dos jogadores colididos
+}
+
 
 // Função para pegar o IP local da máquina
 const getLocalIP = () => {

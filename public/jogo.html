@@ -8,20 +8,30 @@
 
 </head>
 <body>
+    <!-- Modal -->
+    <div id="modal">
+        <div class="modal-content">
+            <p id="modalMessage">Aqui aparecerá a mensagem</p>
+            <button class="close-btn" onclick="closeModal()">Fechar</button>
+        </div>
+    </div>
+    
     <div class="game-container" id="gameContainer">
         <div class="map" id="map">
-            <div class="character" id="character1"></div>
-            <div class="character" id="character2"></div>
+            <!-- <div class="character" id="character1"></div>
+            <div class="character" id="character2"></div> -->
         </div>
     </div>
     <div class="players-container">
         <h1>Jogadores</h1>
         <ul class="player-list" id="playerList">
-            <li class="selected">Romario</li>
-            <li>Nelo</li>
+            <!-- <li class="selected">Romario</li>
+            <li>Nelo</li> -->
         </ul>
     </div>
 
+    <script src="/socket.io/socket.io.js"></script>
     <script src="scripts/jogo.js"></script>
+    
 </body>
 </html>
