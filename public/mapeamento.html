@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor com Números Coloridos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #b4b4b4;
+        }
+        #editor {
+            font-size: 18px;
+            white-space: pre-wrap;
+            border: 1px solid #ccc;
+            padding: 10px;
+            min-height: 200px;
+            width: 90%;
+            outline: none;
+        }
+    </style>
+</head>
+<body>
+    <h2>Editor com Números Coloridos</h2>
+    <div id="editor" contenteditable="true" oninput="highlightNumbers()"></div>
+
+    <script>
+        // Função para salvar a posição do cursor
+        function saveCursorPosition(el) {
+            let sel = window.getSelection();
+            let range = sel.getRangeAt(0);
+            let preCaretRange = range.cloneRange();
+            preCaretRange.selectNodeContents(el);
+            preCaretRange.setEnd(range.endContainer, range.endOffset);
+            return preCaretRange.toString().length;
+        }
+
+        // Função para restaurar a posição do cursor
+        function restoreCursorPosition(el, pos) {
+            let nodeStack = [el], node, foundStart = false;
+            let range = document.createRange();
+            let sel = window.getSelection();
+            let charCount = 0;
+
+            while (nodeStack.length > 0) {
+                node = nodeStack.pop();
+                if (node.nodeType === 3) {
+                    let nextCharCount = charCount + node.length;
+                    if (!foundStart && pos <= nextCharCount) {
+                        range.setStart(node, pos - charCount);
+                        range.setEnd(node, pos - charCount);
+                        foundStart = true;
+                        break;
+                    }
+                    charCount = nextCharCount;
+                } else {
+                    let i = node.childNodes.length;
+                    while (i--) nodeStack.push(node.childNodes[i]);
+                }
+            }
+            
+            sel.removeAllRanges();
+            sel.addRange(range);
+        }
+
+        // Função para destacar os números com cores
+        function highlightNumbers() {
+            let editor = document.getElementById("editor");
+            let pos = saveCursorPosition(editor);
+            let colors = {
+                0: "#000000",  
+                1: "#6ABE30",  
+                2: "#f9865c",  
+                3: "#639BFF",  
+                4: "#76428A", 
+                5: "#FFD700",  
+                6: "#A133FF",  
+                7: "#0f1bfc",  
+                8: "#FF8C00",  
+                9: "#00CED1"   
+            };
+
+            let text = editor.innerText.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            
+            let coloredText = text.replace(/\d/g, match => {
+                let color = colors[match] || "#000000";  // Default para preto se não for mapeado
+                return `<span style="color: ${color}; font-weight: bold;">${match}</span>`;
+            });
+
+            editor.innerHTML = coloredText;
+            restoreCursorPosition(editor, pos);
+            saveContentToLocalStorage(); // Salva o conteúdo no LocalStorage
+        }
+
+        // Função para carregar o conteúdo do LocalStorage
+        function loadContentFromLocalStorage() {
+            let content = localStorage.getItem('editorContent');
+            if (content) {
+                document.getElementById('editor').innerHTML = content;
+                highlightNumbers(); // Aplica a coloração dos números no conteúdo carregado
+            }
+        }
+
+        // Função para salvar o conteúdo no LocalStorage
+        function saveContentToLocalStorage() {
+            let content = document.getElementById('editor').innerHTML;
+            localStorage.setItem('editorContent', content);
+        }
+
+        // Carregar o conteúdo ao iniciar a página
+        window.onload = function() {
+            loadContentFromLocalStorage();
+        }
+
+        // Opcional: Salvando conteúdo no LocalStorage ao sair ou fechar a página
+        window.onbeforeunload = function() {
+            saveContentToLocalStorage();
+        };
+    </script>
+</body>
+</html>

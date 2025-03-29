@@ -30,7 +30,6 @@ function newListSpawns() {
 const adjetivos = ['Furioso', 'Vingador', 'Mestre', 'Invencível', 'Feliz', 'Triste', 'Corajoso', 'Engraçado', 'Mágico', 'Rápido'];
 const substantivos = ['Panda', 'Cavalo', 'Abacaxi', 'Biscoito', 'Gato', 'Salsicha', 'Balde', 'Peixe', 'Pirata', 'Cachorro'];
 const listaNomesJogadores = new Set();
-
 let bancoResistencia = 8;
 
 
@@ -79,6 +78,7 @@ function criarJogador(socket, id) {
     if (!jogadores[chave]) {
         jogadores[socket.id] = {
             id: id,
+
             name: gerarNomeAleatorio(),
             color: gerarCorAleatoria(),
             corpo: listSpawns[Math.floor(Math.random() * listSpawns.length)],
@@ -95,7 +95,6 @@ function criarJogador(socket, id) {
 
         jogadores[socket.id] = JSON.parse(JSON.stringify(jogadores[chave]));
         delete(jogadores[chave])
-
         jogadores[socket.id].id = id;
         jogadores[socket.id].name = gerarNomeAleatorio();
         jogadores[socket.id].resistencia = 0;
@@ -204,6 +203,7 @@ function moverJogador(socket, direcao){
                         case 3: // mercado
                 
                             var msg = `Jogador ${jogador.name} compre algo.`;
+
                             io.emit('acaoJogador', msg); 
                             break;
 
@@ -295,7 +295,6 @@ function jogadorDesconectado(socket) {
             jogadores[socket.id].comDado = false;
         }
 
-        
         
         listaNomesJogadores.delete(jogadores[socket.id].name);
         jogadores[socket.id].name = "";

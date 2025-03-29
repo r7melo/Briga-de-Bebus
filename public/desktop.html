@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Briga de Bebum 🍺</title>
+    <link href="styles/bootstrap.min.css" rel="stylesheet" />
+    <link href="styles/styles-descktop.css" rel="stylesheet" />
+    
+</head>
+<body>
+    <!-- Modal -->
+    <div id="modal">
+        <div class="modal-content">
+            <p id="modalMessage">Aqui aparecerá a mensagem</p>
+            <button class="close-btn" onclick="closeModal()">Fechar</button>
+        </div>
+    </div>
+    
+    <div id="qrcode"></div>
+    <div class="game-container">
+        <canvas id="gameCanvas" width="1000" height="1000"></canvas>
+    </div>
+    <div class="players-container">
+        <h3>Jogadores Conectados</h3>
+        <ul class="playerList" id="playerList"></ul>
+    </div>
+    
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="scripts/qrcode.min.js"></script>
+    <script src="scripts/script-descktop.js"></script>
+
+</body>
+</html>
