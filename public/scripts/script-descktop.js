@@ -148,7 +148,7 @@ window.addEventListener('click', function(event) {
 //#endregion
 
 // Defina o link fixo
-const linkFixo = "10.0.0.121:3000";
+const linkFixo = "http://10.0.0.121:3000";
 
 // Gerar QR Code automaticamente ao carregar a página
 new QRCode(document.getElementById("qrcode"), {
