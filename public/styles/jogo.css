@@ -1,0 +1,81 @@
+/* Estilos gerais */
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    overflow: hidden;
+}
+
+#game {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#map {
+    position: relative;
+    width: 1000px;
+    height: 1000px;
+    background-color: #f0f0f0;
+    overflow: hidden;
+    transition: transform 0.3s ease;
+}
+
+/* Estilo para cada quadrado do mapa */
+.square {
+    position: absolute;
+    width: 25px;
+    height: 25px;
+    border: 1px solid #ddd;
+    background-color: #fff;
+}
+
+/* Mapa com zoom (expandido) */
+#map.zoomed {
+    transform: scale(4); /* 100px por quadrado, zoom de 4x */
+    transform-origin: center;
+}
+
+/* Personagem */
+#character {
+    position: absolute;
+    width: 25px;
+    height: 25px;
+    background-color: red; /* Personagem em vermelho */
+    z-index: 2; /* Para garantir que o personagem fique acima do mapa */
+}
+
+
+/* Barra inferior */
+#bottom-bar {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background-color: #333;
+    color: #fff;
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    align-items: center;
+}
+
+#logo {
+    font-size: 18px;
+    padding-left: 20px;
+}
+
+.zoom-button, .fullscreen-button {
+    background-color: #555;
+    color: #fff;
+    padding: 10px;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.zoom-button:hover, .fullscreen-button:hover {
+    background-color: #888;
+}

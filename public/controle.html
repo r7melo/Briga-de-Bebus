@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo com Controle PS2</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #111;
+        }
+        .game-container {
+            position: relative;
+            width: 90vw;
+            height: 70vh;
+            overflow: hidden;
+            border: 2px solid white;
+        }
+        .map {
+            position: absolute;
+            width: 2000px;
+            height: 2000px;
+            background: url('images/background.png') no-repeat center center;
+            background-size: cover;
+            transition: transform 0.2s ease-out;
+        }
+        .character {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+        }
+        #character1 {
+            background-color: red;
+        }
+        #character2 {
+            background-color: blue;
+        }
+        .toolbar {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            height: 50px;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+        .fullscreen-btn {
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+        }
+        .control-panel {
+            position: fixed;
+            bottom: 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .control-button {
+            width: 60px;
+            height: 60px;
+            margin: 10px;
+            background-color: #333;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        .control-row {
+            display: flex;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container" id="gameContainer">
+        <div class="map" id="map">
+            <div class="character" id="character1"></div>
+            <div class="character" id="character2"></div>
+        </div>
+    </div>
+    <div class="toolbar">
+        <img src="logo.png" alt="Logo" width="100">
+        <img src="expand.png" class="fullscreen-btn" id="fullscreenBtn" onclick="toggleFullscreen()">
+    </div>
+
+    <!-- Painel de Controle -->
+    <div class="control-panel">
+        <div class="control-row">
+            <div class="control-button" id="upButton">↑</div>
+        </div>
+        <div class="control-row">
+            <div class="control-button" id="leftButton">←</div>
+            <div class="control-button" id="rightButton">→</div>
+        </div>
+        <div class="control-row">
+            <div class="control-button" id="downButton">↓</div>
+        </div>
+        <div class="control-row">
+            <div class="control-button" id="switchButton">Trocar</div>
+        </div>
+    </div>
+
+    <script>
+        // Posições iniciais dos dois personagens
+        let posX1 = 0, posY1 = 0;
+        let posX2 = 0, posY2 = 0;
+        
+        let squareSize = 50;   // Tamanho dos personagens
+        const mapSize = 2000;   // Tamanho do mapa
+        const gameContainer = document.getElementById("gameContainer");
+        const map = document.getElementById("map");
+        const character1 = document.getElementById("character1");
+        const character2 = document.getElementById("character2");
+
+        // Personagem atualmente selecionado (1 ou 2)
+        let selectedCharacter = 1;
+
+        // Função para mover os personagens
+        function moveCharacter1(targetX, targetY) {
+            posX1 = Math.max(0, Math.min(mapSize - squareSize, targetX - squareSize / 2));
+            posY1 = Math.max(0, Math.min(mapSize - squareSize, targetY - squareSize / 2));
+            character1.style.left = `${posX1}px`;
+            character1.style.top = `${posY1}px`;
+            
+            updateMapPosition();
+        }
+
+        function moveCharacter2(targetX, targetY) {
+            posX2 = Math.max(0, Math.min(mapSize - squareSize, targetX - squareSize / 2));
+            posY2 = Math.max(0, Math.min(mapSize - squareSize, targetY - squareSize / 2));
+            character2.style.left = `${posX2}px`;
+            character2.style.top = `${posY2}px`;
+            
+            updateMapPosition();
+        }
+
+        // Função para calcular a posição do mapa
+        function updateMapPosition() {
+            const offsetX = Math.max(-mapSize + gameContainer.clientWidth, Math.min(0, -(posX1 - gameContainer.clientWidth / 2)));
+            const offsetY = Math.max(-mapSize + gameContainer.clientHeight, Math.min(0, -(posY1 - gameContainer.clientHeight / 2)));
+            map.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
+        }
+
+        // Função para alternar entre os personagens
+        function switchCharacter() {
+            selectedCharacter = selectedCharacter === 1 ? 2 : 1;
+        }
+
+        // Funções de controle do PS2
+        document.getElementById("upButton").addEventListener("click", () => {
+            if (selectedCharacter === 1) moveCharacter1(posX1, posY1 - squareSize);
+            else moveCharacter2(posX2, posY2 - squareSize);
+        });
+
+        document.getElementById("downButton").addEventListener("click", () => {
+            if (selectedCharacter === 1) moveCharacter1(posX1, posY1 + squareSize);
+            else moveCharacter2(posX2, posY2 + squareSize);
+        });
+
+        document.getElementById("leftButton").addEventListener("click", () => {
+            if (selectedCharacter === 1) moveCharacter1(posX1 - squareSize, posY1);
+            else moveCharacter2(posX2 - squareSize, posY2);
+        });
+
+        document.getElementById("rightButton").addEventListener("click", () => {
+            if (selectedCharacter === 1) moveCharacter1(posX1 + squareSize, posY1);
+            else moveCharacter2(posX2 + squareSize, posY2);
+        });
+
+        document.getElementById("switchButton").addEventListener("click", switchCharacter);
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+    </script>
+</body>
+</html>
