@@ -215,7 +215,42 @@ function moverJogador(socket, direcao){
     
                                 }
 
-                                var msg = `Jogador ${jogador.name} tome uma dose.`;
+                                let msg = `Jogador ${jogador.name} tome uma dose.`;
+                                
+                                if (5 > (Math.floor(Math.random() * 9))){
+                                    let i = (Math.floor(Math.random() * 9) + 1)
+
+                                    switch(i){
+                                        case 1:
+                                            msg = `Jogador ${jogador.name} tome uma culher de pimenta.`;
+                                            break;
+                                        case 2:
+                                            msg = `Jogador ${jogador.name} tome uma chinelada na mão.`;
+                                            break;
+                                        case 3:
+                                            msg = `Jogador ${jogador.name} mostre a bunda.`;
+                                            break;
+                                        case 4:
+                                            msg = `Jogador ${jogador.name} chinelo na bunda.`;
+                                            break;
+                                        case 5:
+                                            msg = `Jogador ${jogador.name} tomar dose com alguém.`;
+                                            break;
+                                        case 6:
+                                            msg = `Jogador ${jogador.name} coloque gelo no saco.`;
+                                            break;
+                                        case 7:
+                                            msg = `Jogador ${jogador.name} coloque pasta na cara.`;
+                                            break;
+                                        case 8:
+                                            msg = `Jogador ${jogador.name} raspe uma parte do troco para baixo.`;
+                                            break;
+                                        case 9:
+                                            msg = `Jogador ${jogador.name} dance de cueca.`;
+                                            break;
+                                    }
+                                }
+
                                 io.emit('acaoJogador', msg); 
                             }
 
