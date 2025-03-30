@@ -56,6 +56,12 @@ for (let i=0; i < 10; i++) {
 app.use(express.static('public'));  // Servir os arquivos estáticos da pasta 'public'
 
 io.on('connection', (socket) => {
+    
+    const room = "sala_geral";
+    socket.join(room);
+
+    const count = io.sockets.adapter.rooms.get(room)?.size || 0;
+    console.log(`Clientes na ${room}: ${count}`);
 
     // Para carregar a página descktop
     io.emit('atualizarJogadores', jogadores); 
