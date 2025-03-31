@@ -67,7 +67,18 @@ socket.on('resultadoDado', (jogador) => {
 });
 
 
-document.getElementById('nomeJogador').addEventListener('input', editarNomeJogador);
+// Escuta o evento 'listCodes' enviado pelo servidor
+socket.on('listCodes', (playerIds) => {
+    const select = document.getElementById("playerSelect");
+    select.innerHTML = ""; // Limpa as opções anteriores
+
+    playerIds.forEach(id => {
+        const option = document.createElement("option");
+        option.value = id;
+        option.textContent = `Jogador ${id}`;
+        select.appendChild(option);
+    });
+});
 
 document.getElementById('up').addEventListener('click', ()=> moverJogador('cima'));
 document.getElementById('down').addEventListener('click', ()=> moverJogador('baixo'));

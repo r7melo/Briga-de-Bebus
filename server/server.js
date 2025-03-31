@@ -30,6 +30,7 @@ function newListSpawns() {
 const adjetivos = ['Furioso', 'Vingador', 'Mestre', 'Invencível', 'Feliz', 'Triste', 'Corajoso', 'Engraçado', 'Mágico', 'Rápido'];
 const substantivos = ['Panda', 'Cavalo', 'Abacaxi', 'Biscoito', 'Gato', 'Salsicha', 'Balde', 'Peixe', 'Pirata', 'Cachorro'];
 const listaNomesJogadores = new Set();
+const listCode = new Set();
 let bancoResistencia = 8;
 
 
@@ -41,7 +42,7 @@ for (let i=0; i < 10; i++) {
     let code = generateId();
 
     jogadores[code] = {
-        id: code,
+        id: null,
         name: gerarNomeAleatorio(),
         color: null,
         corpo: listSpawns[Math.floor(Math.random() * listSpawns.length)],
@@ -67,7 +68,10 @@ io.on('connection', (socket) => {
     io.emit('atualizarJogadores', jogadores); 
 
     // Emitir lista para o controle
-    io.emit('listCodes', Object.keys(jogadores));
+    io.emit('code', Object.keys(jogadores).find(key => jogadores[key] === null) || null);
+    socket.on('code-200', (code) => {
+        
+    });
     
     // Recepção da página mobile
     socket.on('criarJogador', (id) => { criarJogador(socket, id) });
